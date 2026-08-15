@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@justcall/justcall-dialer-sdk": "^1.4.2"
+  }
+}
