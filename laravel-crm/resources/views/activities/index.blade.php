@@ -12,9 +12,10 @@
                     <h2 class="h5 mb-1">Activities</h2>
                     <p class="text-muted mb-0">Track calls, emails, meetings, visits, and follow-ups.</p>
                 </div>
-                @can('activities.create')
-                    <a class="btn btn-primary" href="{{ route('activities.create') }}">Create Activity</a>
-                @endcan
+                <div class="d-flex gap-2">
+                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'activities') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a>@endcan
+                    @can('activities.create')<a class="btn btn-primary" href="{{ route('activities.create') }}">Create Activity</a>@endcan
+                </div>
             </div>
 
             <form class="row g-2" method="get" action="{{ route('activities.index') }}">

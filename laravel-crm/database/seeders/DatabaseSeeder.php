@@ -67,8 +67,16 @@ class DatabaseSeeder extends Seeder
             'calls.update' => 'Update call disposition and notes',
             'calls.recordings.view' => 'View call recordings',
             'audit.view' => 'View audit logs',
+            'reports.view' => 'View reports',
+            'import.leads' => 'Import leads',
+            'import.customers' => 'Import customers and contacts',
+            'export.crm' => 'Export CRM data',
+            'workflows.view' => 'View workflow rules',
+            'workflows.manage' => 'Manage workflow rules',
+            'ops.view' => 'View operational health',
             'justcall.view' => 'View JustCall settings',
             'justcall.manage' => 'Manage JustCall settings',
+            'justcall.monitor' => 'Monitor JustCall integration health',
         ];
 
         foreach ($permissions as $slug => $name) {
@@ -80,12 +88,12 @@ class DatabaseSeeder extends Seeder
             $role->permissions()->syncWithoutDetaching($managementPermissions);
         });
 
-        $managerPermissions = Permission::whereIn('slug', ['users.view', 'roles.view', 'teams.view', 'leads.view', 'leads.create', 'leads.edit', 'leads.assign', 'leads.qualify', 'leads.convert', 'activities.view', 'activities.create', 'activities.edit', 'activities.complete', 'customers.view', 'customers.create', 'customers.edit', 'contacts.view', 'contacts.create', 'contacts.edit', 'opportunities.view', 'opportunities.create', 'opportunities.edit', 'opportunities.change_stage', 'calls.view', 'calls.initiate', 'calls.update', 'calls.recordings.view'])->pluck('id')->all();
+        $managerPermissions = Permission::whereIn('slug', ['users.view', 'roles.view', 'teams.view', 'reports.view', 'import.leads', 'import.customers', 'export.crm', 'workflows.view', 'workflows.manage', 'leads.view', 'leads.create', 'leads.edit', 'leads.assign', 'leads.qualify', 'leads.convert', 'activities.view', 'activities.create', 'activities.edit', 'activities.complete', 'customers.view', 'customers.create', 'customers.edit', 'contacts.view', 'contacts.create', 'contacts.edit', 'opportunities.view', 'opportunities.create', 'opportunities.edit', 'opportunities.change_stage', 'calls.view', 'calls.initiate', 'calls.update', 'calls.recordings.view'])->pluck('id')->all();
         Role::whereIn('slug', ['manager', 'team-leader'])->get()->each(function (Role $role) use ($managerPermissions) {
             $role->permissions()->syncWithoutDetaching($managerPermissions);
         });
 
-        $agentPermissions = Permission::whereIn('slug', ['leads.view', 'leads.create', 'leads.edit', 'leads.qualify', 'leads.convert', 'activities.view', 'activities.create', 'activities.edit', 'activities.complete', 'customers.view', 'customers.create', 'customers.edit', 'contacts.view', 'contacts.create', 'contacts.edit', 'opportunities.view', 'opportunities.create', 'opportunities.edit', 'opportunities.change_stage', 'calls.view', 'calls.initiate', 'calls.update', 'calls.recordings.view'])->pluck('id')->all();
+        $agentPermissions = Permission::whereIn('slug', ['reports.view', 'export.crm', 'leads.view', 'leads.create', 'leads.edit', 'leads.qualify', 'leads.convert', 'activities.view', 'activities.create', 'activities.edit', 'activities.complete', 'customers.view', 'customers.create', 'customers.edit', 'contacts.view', 'contacts.create', 'contacts.edit', 'opportunities.view', 'opportunities.create', 'opportunities.edit', 'opportunities.change_stage', 'calls.view', 'calls.initiate', 'calls.update', 'calls.recordings.view'])->pluck('id')->all();
         Role::where('slug', 'agent')->get()->each(function (Role $role) use ($agentPermissions) {
             $role->permissions()->syncWithoutDetaching($agentPermissions);
         });

@@ -78,6 +78,7 @@ class LeadController extends Controller
             'updated_by_id' => $request->user()->id,
         ]));
         $audit->created($lead, 'lead.created', 'Lead created.', $request->user(), $request);
+        app(\App\Services\WorkflowRuleService::class)->dispatch($lead, 'record_created', ['event_key' => 'lead-created:'.$lead->id], $request->user());
 
         return redirect()->route('leads.show', $lead)->with('status', 'Lead created.');
     }
@@ -135,12 +136,18 @@ class LeadController extends Controller
         $validated = $this->validatedLead($request);
         $ownerId = $this->resolveOwnerId($request, $validated);
         $before = $lead->getAttributes();
+        $previousStatus = $lead->status?->slug;
 
         $lead->fill(array_merge($validated, [
             'owner_id' => $ownerId,
             'updated_by_id' => $request->user()->id,
         ]))->save();
         $audit->updated($lead, $before, 'lead.updated', 'Lead updated.', $request->user(), $request);
+        $workflow = app(\App\Services\WorkflowRuleService::class);
+        $workflow->dispatch($lead, 'record_updated', ['event_key' => 'lead-updated:'.$lead->id.':'.$lead->updated_at?->format('U.u')], $request->user());
+        if ($previousStatus !== $lead->status?->slug) {
+            $workflow->dispatch($lead, 'lead_status_changed', ['previous_status' => $previousStatus, 'event_key' => 'lead-status:'.$lead->id.':'.$lead->updated_at?->format('U.u')], $request->user());
+        }
 
         return redirect()->route('leads.show', $lead)->with('status', 'Lead updated.');
     }

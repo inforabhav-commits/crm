@@ -1,0 +1,779 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" tests="10" assertions="16" errors="3" warnings="0" failures="4" skipped="0" time="1.603579">
+    <testcase name="test_monitoring_page_requires_justcall_monitor_permission" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="47" assertions="2" time="0.584531">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\JustCallMonitoringTest::test_monitoring_page_requires_justcall_monitor_permission
+Expected response status code [403] but received 200.
+Failed asserting that 403 is identical to 200.
+
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:123
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:113
+C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php:58</failure>
+    </testcase>
+    <testcase name="test_summary_counts_and_unmatched_calls_are_visible" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="61" assertions="0" time="0.095122">
+      <error type="Illuminate\Database\QueryException">Tests\Feature\JustCallMonitoringTest::test_summary_counts_and_unmatched_calls_are_visible
+Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 FOREIGN KEY constraint failed (SQL: insert into "call_logs" ("provider", "external_call_id", "direction", "status", "customer_number", "customer_number_normalized", "lead_id", "last_event_at", "updated_at", "created_at") values (justcall, call-2, outbound, completed, +15550022, 15550022, 1, 2026-08-16 13:41:10, 2026-08-16 13:41:10, 2026-08-16 13:41:10))
+
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:760
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:720
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:546
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:498
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3322
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1869
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1330
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1295
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:986
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Support\helpers.php:319
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:987
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2330
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2342
+C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php:106</error>
+    </testcase>
+    <testcase name="test_ambiguous_call_appears_on_monitoring_and_reconciliation_view" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="117" assertions="3" time="0.104143">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\JustCallMonitoringTest::test_ambiguous_call_appears_on_monitoring_and_reconciliation_view
+Failed asserting that '&lt;!doctype html&gt;\n
+&lt;html lang="en"&gt;\n
+&lt;head&gt;\n
+    &lt;meta charset="utf-8"&gt;\n
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;\n
+    &lt;meta name="csrf-token" content="u9M7LNRFGWavD02c88P5o9nf8cmluRM6BmwNqrBN"&gt;\n
+    &lt;title&gt;Integraton Monitoring | Laravel CRM&lt;/title&gt;\n
+    &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"&gt;\n
+    &lt;style&gt;\n
+        body { background: #f5f7fb; }\n
+        .crm-shell { min-height: 100vh; }\n
+        .crm-sidebar { width: 280px; background: #111827; color: #e5e7eb; }\n
+        .crm-sidebar a { color: #d1d5db; text-decoration: none; }\n
+        .crm-sidebar a:hover, .crm-sidebar a.active { background: #1f2937; color: #ffffff; }\n
+        .crm-main { min-width: 0; }\n
+        .crm-topbar { background: #ffffff; border-bottom: 1px solid #e5e7eb; }\n
+        .nav-section { color: #9ca3af; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }\n
+        .screen-pop { position: fixed; right: 1.25rem; bottom: 1.25rem; width: min(360px, calc(100vw - 2.5rem)); z-index: 1080; display: none; }\n
+        @media (max-width: 991.98px) {\n
+            .crm-sidebar { width: 100%; }\n
+            .crm-shell { display: block !important; }\n
+        }\n
+    &lt;/style&gt;\n
+&lt;/head&gt;\n
+&lt;body&gt;\n
+&lt;div class="crm-shell d-flex"&gt;\n
+    &lt;aside class="crm-sidebar p-3"&gt;\n
+        &lt;div class="d-flex align-items-center gap-2 mb-4"&gt;\n
+            &lt;span class="badge text-bg-primary rounded-1"&gt;CRM&lt;/span&gt;\n
+            &lt;div&gt;\n
+                &lt;div class="fw-semibold"&gt;Laravel CRM&lt;/div&gt;\n
+                &lt;small class="text-secondary"&gt;Sales workspace&lt;/small&gt;\n
+            &lt;/div&gt;\n
+        &lt;/div&gt;\n
+\n
+        \n
+        &lt;nav class="d-grid gap-1"&gt;\n
+                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/dashboard"&gt;Dashboard&lt;/a&gt;\n
+                                                                &lt;div class="nav-section mt-3 mb-1"&gt;CRM&lt;/div&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/leads"&gt;Leads&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/customers"&gt;Customers&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/contacts"&gt;Contacts&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/opportunities"&gt;Opportunities&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/activities"&gt;Activities&lt;/a&gt;\n
+                                                                &lt;div class="nav-section mt-3 mb-1"&gt;Communication&lt;/div&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/calls"&gt;Calls&lt;/a&gt;\n
+                                                                &lt;div class="nav-section mt-3 mb-1"&gt;Reports&lt;/div&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/module/reports"&gt;Reports&lt;/a&gt;\n
+                                                                &lt;div class="nav-section mt-3 mb-1"&gt;Administration&lt;/div&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/users"&gt;Users&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/roles-permissions"&gt;Roles &amp;amp; Permissions&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/teams"&gt;Teams&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/crm-settings"&gt;CRM Settings&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/audit-logs"&gt;Audit Log&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/justcall-settings"&gt;JustCall Settings&lt;/a&gt;\n
+                                    &lt;/nav&gt;\n
+    &lt;/aside&gt;\n
+\n
+    &lt;div class="crm-main flex-grow-1"&gt;\n
+        &lt;header class="crm-topbar px-4 py-3 d-flex align-items-center justify-content-between"&gt;\n
+            &lt;div&gt;\n
+                &lt;h1 class="h4 mb-0"&gt;Integraton Monitoring&lt;/h1&gt;\n
+                &lt;small class="text-muted"&gt;Secure Laravel CRM foundation&lt;/small&gt;\n
+            &lt;/div&gt;\n
+            &lt;div class="d-flex align-items-center gap-3"&gt;\n
+                &lt;a class="btn btn-outline-primary btn-sm" href="http://localhost:8000/notifications"&gt;\n
+                    Notifications\n
+                                    &lt;/a&gt;\n
+                &lt;span class="text-muted"&gt;Dr. Zackary Dietrich V&lt;/span&gt;\n
+                &lt;form method="post" action="http://localhost:8000/logout"&gt;\n
+                    &lt;input type="hidden" name="_token" value="u9M7LNRFGWavD02c88P5o9nf8cmluRM6BmwNqrBN"&gt;                    &lt;button class="btn btn-outline-secondary btn-sm" type="submit"&gt;Logout&lt;/button&gt;\n
+                &lt;/form&gt;\n
+            &lt;/div&gt;\n
+        &lt;/header&gt;\n
+\n
+        &lt;main class="p-4"&gt;\n
+                \r\n
+    &lt;div class="d-flex justify-content-between align-items-center mb-3"&gt;\r\n
+        &lt;div&gt;\r\n
+            &lt;h2 class="h5 mb-0"&gt;Integration Monitoring&lt;/h2&gt;\r\n
+            &lt;div class="text-muted small"&gt;JustCall health, webhook backlog, and reconciliation exceptions.&lt;/div&gt;\r\n
+        &lt;/div&gt;\r\n
+        &lt;div class="d-flex gap-2"&gt;\r\n
+            &lt;a class="btn btn-outline-secondary btn-sm" href="http://localhost:8000/admin/justcall-settings"&gt;Settings&lt;/a&gt;\r\n
+                    &lt;/div&gt;\r\n
+    &lt;/div&gt;\r\n
+\r\n
+    &lt;div class="row g-3 mb-4"&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Webhooks received&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Pending webhooks&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Failed webhooks&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Unsupported events&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Normalized events&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Calls created or updated&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;1&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Unmatched calls&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;1&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Ambiguous calls&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;1&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Unmapped agents&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Missed call skipped&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Missed call failed&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Last successful webhook&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Last processing failure&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+\r\n
+    &lt;section class="card border-0 shadow-sm mb-4"&gt;\r\n
+        &lt;div class="card-body"&gt;\r\n
+            &lt;h3 class="h6"&gt;Filters&lt;/h3&gt;\r\n
+            &lt;form class="row g-2" method="get"&gt;\r\n
+                &lt;div class="col-md-3"&gt;\r\n
+                    &lt;label class="form-label" for="from"&gt;From&lt;/label&gt;\r\n
+                    &lt;input class="form-control" id="from" name="from" type="date" value=""&gt;\r\n
+                &lt;/div&gt;\r\n
+                &lt;div class="col-md-3"&gt;\r\n
+                    &lt;label class="form-label" for="to"&gt;To&lt;/label&gt;\r\n
+                    &lt;input class="form-control" id="to" name="to" type="date" value=""&gt;\r\n
+                &lt;/div&gt;\r\n
+                &lt;div class="col-md-3"&gt;\r\n
+                    &lt;label class="form-label" for="event_type"&gt;Event type&lt;/label&gt;\r\n
+                    &lt;select class="form-select" id="event_type" name="event_type"&gt;\r\n
+                        &lt;option value=""&gt;All&lt;/option&gt;\r\n
+                                            &lt;/select&gt;\r\n
+                &lt;/div&gt;\r\n
+                &lt;div class="col-md-3"&gt;\r\n
+                    &lt;label class="form-label" for="processing_status"&gt;Status&lt;/label&gt;\r\n
+                    &lt;select class="form-select" id="processing_status" name="processing_status"&gt;\r\n
+                        &lt;option value=""&gt;All&lt;/option&gt;\r\n
+                                            &lt;/select&gt;\r\n
+                &lt;/div&gt;\r\n
+                &lt;div class="col-12"&gt;\r\n
+                    &lt;button class="btn btn-primary btn-sm" type="submit"&gt;Apply&lt;/button&gt;\r\n
+                    &lt;a class="btn btn-outline-secondary btn-sm" href="http://localhost:8000/admin/justcall-settings/monitoring"&gt;Reset&lt;/a&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/form&gt;\r\n
+        &lt;/div&gt;\r\n
+    &lt;/section&gt;\r\n
+\r\n
+    &lt;section class="card border-0 shadow-sm mb-4"&gt;\r\n
+        &lt;div class="card-body"&gt;\r\n
+            &lt;h3 class="h6"&gt;Webhook inbox&lt;/h3&gt;\r\n
+            &lt;div class="table-responsive"&gt;\r\n
+                &lt;table class="table table-sm align-middle"&gt;\r\n
+                    &lt;thead&gt;\r\n
+                        &lt;tr&gt;&lt;th&gt;Received&lt;/th&gt;&lt;th&gt;Event&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Attempts&lt;/th&gt;&lt;th&gt;Summary&lt;/th&gt;&lt;/tr&gt;\r\n
+                    &lt;/thead&gt;\r\n
+                    &lt;tbody&gt;\r\n
+                                                    &lt;tr&gt;&lt;td colspan="5" class="text-muted"&gt;No webhook inbox entries.&lt;/td&gt;&lt;/tr&gt;\r\n
+                                            &lt;/tbody&gt;\r\n
+                &lt;/table&gt;\r\n
+            &lt;/div&gt;\r\n
+            \r\n
+        &lt;/div&gt;\r\n
+    &lt;/section&gt;\r\n
+\r\n
+    &lt;section class="card border-0 shadow-sm"&gt;\r\n
+        &lt;div class="card-body"&gt;\r\n
+            &lt;h3 class="h6"&gt;Mapping health&lt;/h3&gt;\r\n
+            &lt;div class="table-responsive"&gt;\r\n
+                &lt;table class="table table-sm align-middle"&gt;\r\n
+                    &lt;thead&gt;\r\n
+                        &lt;tr&gt;&lt;th&gt;CRM User&lt;/th&gt;&lt;th&gt;Issue&lt;/th&gt;&lt;th&gt;Last Verified&lt;/th&gt;&lt;/tr&gt;\r\n
+                    &lt;/thead&gt;\r\n
+                    &lt;tbody&gt;\r\n
+                                                    &lt;tr&gt;&lt;td colspan="3" class="text-muted"&gt;No mapping issues detected.&lt;/td&gt;&lt;/tr&gt;\r\n
+                                            &lt;/tbody&gt;\r\n
+                &lt;/table&gt;\r\n
+            &lt;/div&gt;\r\n
+        &lt;/div&gt;\r\n
+    &lt;/section&gt;\r\n
+        &lt;/main&gt;\n
+    &lt;/div&gt;\n
+&lt;/div&gt;\n
+&lt;div class="screen-pop card border-0 shadow-lg" id="screen-pop" aria-live="polite"&gt;\n
+    &lt;div class="card-body"&gt;\n
+        &lt;div class="d-flex align-items-start justify-content-between gap-2 mb-2"&gt;\n
+            &lt;div&gt;\n
+                &lt;div class="text-muted small"&gt;Incoming Call&lt;/div&gt;\n
+                &lt;h2 class="h6 mb-0" id="screen-pop-title"&gt;Unknown Caller&lt;/h2&gt;\n
+            &lt;/div&gt;\n
+            &lt;button class="btn-close" type="button" id="screen-pop-dismiss" aria-label="Dismiss"&gt;&lt;/button&gt;\n
+        &lt;/div&gt;\n
+        &lt;div class="small text-muted mb-2" id="screen-pop-phone"&gt;&lt;/div&gt;\n
+        &lt;div class="small mb-3" id="screen-pop-summary"&gt;&lt;/div&gt;\n
+        &lt;div class="d-flex gap-2"&gt;\n
+            &lt;a class="btn btn-sm btn-primary" id="screen-pop-open" href="#" style="display:none"&gt;Open Record&lt;/a&gt;\n
+            &lt;a class="btn btn-sm btn-outline-secondary" id="screen-pop-search" href="#"&gt;Search Leads&lt;/a&gt;\n
+        &lt;/div&gt;\n
+    &lt;/div&gt;\n
+&lt;/div&gt;\n
+&lt;script&gt;\n
+    document.addEventListener('submit', function (event) {\n
+        if (! event.target.matches('[data-click-to-call-form]')) {\n
+            return;\n
+        }\n
+\n
+        const button = event.target.querySelector('[data-click-to-call-button]');\n
+        if (! button) {\n
+            return;\n
+        }\n
+\n
+        button.disabled = true;\n
+        button.dataset.originalText = button.textContent;\n
+        button.textContent = 'Launching...';\n
+    });\n
+\n
+    (function () {\n
+        const box = document.getElementById('screen-pop');\n
+        const title = document.getElementById('screen-pop-title');\n
+        const phone = document.getElementById('screen-pop-phone');\n
+        const summary = document.getElementById('screen-pop-summary');\n
+        const open = document.getElementById('screen-pop-open');\n
+        const search = document.getElementById('screen-pop-search');\n
+        const dismiss = document.getElementById('screen-pop-dismiss');\n
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');\n
+        let currentDismissUrl = null;\n
+\n
+        function show(data) {\n
+            currentDismissUrl = data.dismiss_url;\n
+            phone.textContent = data.caller_phone || 'Unknown number';\n
+            search.href = data.search_url;\n
+            open.style.display = 'none';\n
+            open.removeAttribute('href');\n
+\n
+            if (data.record) {\n
+                title.textContent = data.record.name;\n
+                summary.textContent = data.record.type + (data.record.owner ? ' · Owner: ' + data.record.owner : '') + (data.record.recent_activity ? ' · Recent: ' + data.record.recent_activity : '');\n
+                open.href = data.record.url;\n
+                open.style.display = '';\n
+            } else if (data.match_state === 'ambiguous') {\n
+                title.textContent = 'Possible Matches';\n
+                summary.textContent = 'Multiple ' + (data.ambiguous_type || 'CRM') + ' records match this caller.';\n
+            } else if (data.match_state === 'restricted') {\n
+                title.textContent = 'Matched Caller';\n
+                summary.textContent = 'A CRM record matched, but it is outside your current access.';\n
+            } else {\n
+                title.textContent = 'Unknown Caller';\n
+                summary.textContent = 'No safe CRM match found.';\n
+            }\n
+\n
+            box.style.display = 'block';\n
+        }\n
+\n
+        function hide() {\n
+            box.style.display = 'none';\n
+            currentDismissUrl = null;\n
+        }\n
+\n
+        async function poll() {\n
+            try {\n
+                const response = await fetch('http://localhost:8000/screen-pop/current', {headers: {'Accept': 'application/json'}});\n
+                if (! response.ok) {\n
+                    hide();\n
+                    return;\n
+                }\n
+\n
+                const payload = await response.json();\n
+                payload.screen_pop ? show(payload.screen_pop) : hide();\n
+            } catch (error) {\n
+                hide();\n
+            }\n
+        }\n
+\n
+        dismiss.addEventListener('click', async function () {\n
+            if (currentDismissUrl) {\n
+                await fetch(currentDismissUrl, {method: 'POST', headers: {'X-CSRF-TOKEN': csrf, 'Accept': 'application/json'}});\n
+            }\n
+            hide();\n
+        });\n
+\n
+        poll();\n
+        window.setInterval(poll, 10000);\n
+    })();\n
+&lt;/script&gt;\n
+&lt;/body&gt;\n
+&lt;/html&gt;\n
+' contains "call-ambiguous".
+
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:527
+C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php:138</failure>
+    </testcase>
+    <testcase name="test_manual_reconciliation_links_call_safely" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="146" assertions="0" time="0.091874">
+      <error type="Illuminate\Database\QueryException">Tests\Feature\JustCallMonitoringTest::test_manual_reconciliation_links_call_safely
+Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 FOREIGN KEY constraint failed (SQL: insert into "leads" ("name", "phone", "owner_id", "lead_status_id", "lead_source_id", "created_by_id", "updated_by_id", "updated_at", "created_at") values (New Lead, +15550099, 1, 1, 1, 1, 1, 2026-08-16 13:41:10, 2026-08-16 13:41:10))
+
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:760
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:720
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:546
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:498
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3322
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1869
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1330
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1295
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:986
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Support\helpers.php:319
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:987
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2330
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2342
+C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php:156</error>
+    </testcase>
+    <testcase name="test_webhook_reprocessing_remains_idempotent" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="189" assertions="3" time="0.109636"/>
+    <testcase name="test_failed_reprocessing_records_failure_safely" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="213" assertions="2" time="0.126793">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\JustCallMonitoringTest::test_failed_reprocessing_records_failure_safely
+Failed asserting that '{"id":1,"provider":"justcall","event_type":"call.unsupported","external_id":"evt-unsupported","payload_hash":"ee3b67b8b246e0f1d0fedee1580bdc5d408c8c588b87b0a9632f79ff2b4b4579","payload":{"type":"call.unsupported","api_secret":"top-secret"},"received_at":"2026-08-16T13:41:10.000000Z","processing_status":"unsupported","processed_at":"2026-08-16T13:41:10.000000Z","failure_summary":"Unsupported JustCall event type.","attempt_count":1,"created_at":"2026-08-16T13:41:10.000000Z","updated_at":"2026-08-16T13:41:10.000000Z","normalized_payload":null,"normalized_event_type":null,"normalized_at":null,"call_log_id":null}' does not contain "top-secret".
+
+C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php:232</failure>
+    </testcase>
+    <testcase name="test_unmapped_agent_issue_appears" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="236" assertions="2" time="0.179624">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\JustCallMonitoringTest::test_unmapped_agent_issue_appears
+Failed asserting that '&lt;!doctype html&gt;\n
+&lt;html lang="en"&gt;\n
+&lt;head&gt;\n
+    &lt;meta charset="utf-8"&gt;\n
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;\n
+    &lt;meta name="csrf-token" content="Zlr6MPOQKipw8A71soSHzGXlTbTsQ4oMLaJfnwRe"&gt;\n
+    &lt;title&gt;Integraton Monitoring | Laravel CRM&lt;/title&gt;\n
+    &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"&gt;\n
+    &lt;style&gt;\n
+        body { background: #f5f7fb; }\n
+        .crm-shell { min-height: 100vh; }\n
+        .crm-sidebar { width: 280px; background: #111827; color: #e5e7eb; }\n
+        .crm-sidebar a { color: #d1d5db; text-decoration: none; }\n
+        .crm-sidebar a:hover, .crm-sidebar a.active { background: #1f2937; color: #ffffff; }\n
+        .crm-main { min-width: 0; }\n
+        .crm-topbar { background: #ffffff; border-bottom: 1px solid #e5e7eb; }\n
+        .nav-section { color: #9ca3af; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }\n
+        .screen-pop { position: fixed; right: 1.25rem; bottom: 1.25rem; width: min(360px, calc(100vw - 2.5rem)); z-index: 1080; display: none; }\n
+        @media (max-width: 991.98px) {\n
+            .crm-sidebar { width: 100%; }\n
+            .crm-shell { display: block !important; }\n
+        }\n
+    &lt;/style&gt;\n
+&lt;/head&gt;\n
+&lt;body&gt;\n
+&lt;div class="crm-shell d-flex"&gt;\n
+    &lt;aside class="crm-sidebar p-3"&gt;\n
+        &lt;div class="d-flex align-items-center gap-2 mb-4"&gt;\n
+            &lt;span class="badge text-bg-primary rounded-1"&gt;CRM&lt;/span&gt;\n
+            &lt;div&gt;\n
+                &lt;div class="fw-semibold"&gt;Laravel CRM&lt;/div&gt;\n
+                &lt;small class="text-secondary"&gt;Sales workspace&lt;/small&gt;\n
+            &lt;/div&gt;\n
+        &lt;/div&gt;\n
+\n
+        \n
+        &lt;nav class="d-grid gap-1"&gt;\n
+                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/dashboard"&gt;Dashboard&lt;/a&gt;\n
+                                                                &lt;div class="nav-section mt-3 mb-1"&gt;CRM&lt;/div&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/leads"&gt;Leads&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/customers"&gt;Customers&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/contacts"&gt;Contacts&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/opportunities"&gt;Opportunities&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/activities"&gt;Activities&lt;/a&gt;\n
+                                                                &lt;div class="nav-section mt-3 mb-1"&gt;Communication&lt;/div&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/calls"&gt;Calls&lt;/a&gt;\n
+                                                                &lt;div class="nav-section mt-3 mb-1"&gt;Reports&lt;/div&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/module/reports"&gt;Reports&lt;/a&gt;\n
+                                                                &lt;div class="nav-section mt-3 mb-1"&gt;Administration&lt;/div&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/users"&gt;Users&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/roles-permissions"&gt;Roles &amp;amp; Permissions&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/teams"&gt;Teams&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/crm-settings"&gt;CRM Settings&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/audit-logs"&gt;Audit Log&lt;/a&gt;\n
+                                                                &lt;a class="d-block rounded px-3 py-2 " href="http://localhost:8000/admin/justcall-settings"&gt;JustCall Settings&lt;/a&gt;\n
+                                    &lt;/nav&gt;\n
+    &lt;/aside&gt;\n
+\n
+    &lt;div class="crm-main flex-grow-1"&gt;\n
+        &lt;header class="crm-topbar px-4 py-3 d-flex align-items-center justify-content-between"&gt;\n
+            &lt;div&gt;\n
+                &lt;h1 class="h4 mb-0"&gt;Integraton Monitoring&lt;/h1&gt;\n
+                &lt;small class="text-muted"&gt;Secure Laravel CRM foundation&lt;/small&gt;\n
+            &lt;/div&gt;\n
+            &lt;div class="d-flex align-items-center gap-3"&gt;\n
+                &lt;a class="btn btn-outline-primary btn-sm" href="http://localhost:8000/notifications"&gt;\n
+                    Notifications\n
+                                    &lt;/a&gt;\n
+                &lt;span class="text-muted"&gt;Prof. Ottilie Leffler Sr.&lt;/span&gt;\n
+                &lt;form method="post" action="http://localhost:8000/logout"&gt;\n
+                    &lt;input type="hidden" name="_token" value="Zlr6MPOQKipw8A71soSHzGXlTbTsQ4oMLaJfnwRe"&gt;                    &lt;button class="btn btn-outline-secondary btn-sm" type="submit"&gt;Logout&lt;/button&gt;\n
+                &lt;/form&gt;\n
+            &lt;/div&gt;\n
+        &lt;/header&gt;\n
+\n
+        &lt;main class="p-4"&gt;\n
+                \r\n
+    &lt;div class="d-flex justify-content-between align-items-center mb-3"&gt;\r\n
+        &lt;div&gt;\r\n
+            &lt;h2 class="h5 mb-0"&gt;Integration Monitoring&lt;/h2&gt;\r\n
+            &lt;div class="text-muted small"&gt;JustCall health, webhook backlog, and reconciliation exceptions.&lt;/div&gt;\r\n
+        &lt;/div&gt;\r\n
+        &lt;div class="d-flex gap-2"&gt;\r\n
+            &lt;a class="btn btn-outline-secondary btn-sm" href="http://localhost:8000/admin/justcall-settings"&gt;Settings&lt;/a&gt;\r\n
+                    &lt;/div&gt;\r\n
+    &lt;/div&gt;\r\n
+\r\n
+    &lt;div class="row g-3 mb-4"&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Webhooks received&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Pending webhooks&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Failed webhooks&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Unsupported events&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Normalized events&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Calls created or updated&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;1&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Unmatched calls&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;1&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Ambiguous calls&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;1&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Unmapped agents&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;1&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Missed call skipped&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Missed call failed&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Last successful webhook&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+                                &lt;div class="col-md-3"&gt;\r\n
+                &lt;div class="border rounded p-3 h-100"&gt;\r\n
+                    &lt;div class="text-muted small text-capitalize"&gt;Last processing failure&lt;/div&gt;\r\n
+                    &lt;div class="fw-semibold mt-1"&gt;0&lt;/div&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+            &lt;/div&gt;\r\n
+\r\n
+    &lt;section class="card border-0 shadow-sm mb-4"&gt;\r\n
+        &lt;div class="card-body"&gt;\r\n
+            &lt;h3 class="h6"&gt;Filters&lt;/h3&gt;\r\n
+            &lt;form class="row g-2" method="get"&gt;\r\n
+                &lt;div class="col-md-3"&gt;\r\n
+                    &lt;label class="form-label" for="from"&gt;From&lt;/label&gt;\r\n
+                    &lt;input class="form-control" id="from" name="from" type="date" value=""&gt;\r\n
+                &lt;/div&gt;\r\n
+                &lt;div class="col-md-3"&gt;\r\n
+                    &lt;label class="form-label" for="to"&gt;To&lt;/label&gt;\r\n
+                    &lt;input class="form-control" id="to" name="to" type="date" value=""&gt;\r\n
+                &lt;/div&gt;\r\n
+                &lt;div class="col-md-3"&gt;\r\n
+                    &lt;label class="form-label" for="event_type"&gt;Event type&lt;/label&gt;\r\n
+                    &lt;select class="form-select" id="event_type" name="event_type"&gt;\r\n
+                        &lt;option value=""&gt;All&lt;/option&gt;\r\n
+                                            &lt;/select&gt;\r\n
+                &lt;/div&gt;\r\n
+                &lt;div class="col-md-3"&gt;\r\n
+                    &lt;label class="form-label" for="processing_status"&gt;Status&lt;/label&gt;\r\n
+                    &lt;select class="form-select" id="processing_status" name="processing_status"&gt;\r\n
+                        &lt;option value=""&gt;All&lt;/option&gt;\r\n
+                                            &lt;/select&gt;\r\n
+                &lt;/div&gt;\r\n
+                &lt;div class="col-12"&gt;\r\n
+                    &lt;button class="btn btn-primary btn-sm" type="submit"&gt;Apply&lt;/button&gt;\r\n
+                    &lt;a class="btn btn-outline-secondary btn-sm" href="http://localhost:8000/admin/justcall-settings/monitoring"&gt;Reset&lt;/a&gt;\r\n
+                &lt;/div&gt;\r\n
+            &lt;/form&gt;\r\n
+        &lt;/div&gt;\r\n
+    &lt;/section&gt;\r\n
+\r\n
+    &lt;section class="card border-0 shadow-sm mb-4"&gt;\r\n
+        &lt;div class="card-body"&gt;\r\n
+            &lt;h3 class="h6"&gt;Webhook inbox&lt;/h3&gt;\r\n
+            &lt;div class="table-responsive"&gt;\r\n
+                &lt;table class="table table-sm align-middle"&gt;\r\n
+                    &lt;thead&gt;\r\n
+                        &lt;tr&gt;&lt;th&gt;Received&lt;/th&gt;&lt;th&gt;Event&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Attempts&lt;/th&gt;&lt;th&gt;Summary&lt;/th&gt;&lt;/tr&gt;\r\n
+                    &lt;/thead&gt;\r\n
+                    &lt;tbody&gt;\r\n
+                                                    &lt;tr&gt;&lt;td colspan="5" class="text-muted"&gt;No webhook inbox entries.&lt;/td&gt;&lt;/tr&gt;\r\n
+                                            &lt;/tbody&gt;\r\n
+                &lt;/table&gt;\r\n
+            &lt;/div&gt;\r\n
+            \r\n
+        &lt;/div&gt;\r\n
+    &lt;/section&gt;\r\n
+\r\n
+    &lt;section class="card border-0 shadow-sm"&gt;\r\n
+        &lt;div class="card-body"&gt;\r\n
+            &lt;h3 class="h6"&gt;Mapping health&lt;/h3&gt;\r\n
+            &lt;div class="table-responsive"&gt;\r\n
+                &lt;table class="table table-sm align-middle"&gt;\r\n
+                    &lt;thead&gt;\r\n
+                        &lt;tr&gt;&lt;th&gt;CRM User&lt;/th&gt;&lt;th&gt;Issue&lt;/th&gt;&lt;th&gt;Last Verified&lt;/th&gt;&lt;/tr&gt;\r\n
+                    &lt;/thead&gt;\r\n
+                    &lt;tbody&gt;\r\n
+                                                    &lt;tr&gt;&lt;td colspan="3" class="text-muted"&gt;No mapping issues detected.&lt;/td&gt;&lt;/tr&gt;\r\n
+                                            &lt;/tbody&gt;\r\n
+                &lt;/table&gt;\r\n
+            &lt;/div&gt;\r\n
+        &lt;/div&gt;\r\n
+    &lt;/section&gt;\r\n
+        &lt;/main&gt;\n
+    &lt;/div&gt;\n
+&lt;/div&gt;\n
+&lt;div class="screen-pop card border-0 shadow-lg" id="screen-pop" aria-live="polite"&gt;\n
+    &lt;div class="card-body"&gt;\n
+        &lt;div class="d-flex align-items-start justify-content-between gap-2 mb-2"&gt;\n
+            &lt;div&gt;\n
+                &lt;div class="text-muted small"&gt;Incoming Call&lt;/div&gt;\n
+                &lt;h2 class="h6 mb-0" id="screen-pop-title"&gt;Unknown Caller&lt;/h2&gt;\n
+            &lt;/div&gt;\n
+            &lt;button class="btn-close" type="button" id="screen-pop-dismiss" aria-label="Dismiss"&gt;&lt;/button&gt;\n
+        &lt;/div&gt;\n
+        &lt;div class="small text-muted mb-2" id="screen-pop-phone"&gt;&lt;/div&gt;\n
+        &lt;div class="small mb-3" id="screen-pop-summary"&gt;&lt;/div&gt;\n
+        &lt;div class="d-flex gap-2"&gt;\n
+            &lt;a class="btn btn-sm btn-primary" id="screen-pop-open" href="#" style="display:none"&gt;Open Record&lt;/a&gt;\n
+            &lt;a class="btn btn-sm btn-outline-secondary" id="screen-pop-search" href="#"&gt;Search Leads&lt;/a&gt;\n
+        &lt;/div&gt;\n
+    &lt;/div&gt;\n
+&lt;/div&gt;\n
+&lt;script&gt;\n
+    document.addEventListener('submit', function (event) {\n
+        if (! event.target.matches('[data-click-to-call-form]')) {\n
+            return;\n
+        }\n
+\n
+        const button = event.target.querySelector('[data-click-to-call-button]');\n
+        if (! button) {\n
+            return;\n
+        }\n
+\n
+        button.disabled = true;\n
+        button.dataset.originalText = button.textContent;\n
+        button.textContent = 'Launching...';\n
+    });\n
+\n
+    (function () {\n
+        const box = document.getElementById('screen-pop');\n
+        const title = document.getElementById('screen-pop-title');\n
+        const phone = document.getElementById('screen-pop-phone');\n
+        const summary = document.getElementById('screen-pop-summary');\n
+        const open = document.getElementById('screen-pop-open');\n
+        const search = document.getElementById('screen-pop-search');\n
+        const dismiss = document.getElementById('screen-pop-dismiss');\n
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');\n
+        let currentDismissUrl = null;\n
+\n
+        function show(data) {\n
+            currentDismissUrl = data.dismiss_url;\n
+            phone.textContent = data.caller_phone || 'Unknown number';\n
+            search.href = data.search_url;\n
+            open.style.display = 'none';\n
+            open.removeAttribute('href');\n
+\n
+            if (data.record) {\n
+                title.textContent = data.record.name;\n
+                summary.textContent = data.record.type + (data.record.owner ? ' · Owner: ' + data.record.owner : '') + (data.record.recent_activity ? ' · Recent: ' + data.record.recent_activity : '');\n
+                open.href = data.record.url;\n
+                open.style.display = '';\n
+            } else if (data.match_state === 'ambiguous') {\n
+                title.textContent = 'Possible Matches';\n
+                summary.textContent = 'Multiple ' + (data.ambiguous_type || 'CRM') + ' records match this caller.';\n
+            } else if (data.match_state === 'restricted') {\n
+                title.textContent = 'Matched Caller';\n
+                summary.textContent = 'A CRM record matched, but it is outside your current access.';\n
+            } else {\n
+                title.textContent = 'Unknown Caller';\n
+                summary.textContent = 'No safe CRM match found.';\n
+            }\n
+\n
+            box.style.display = 'block';\n
+        }\n
+\n
+        function hide() {\n
+            box.style.display = 'none';\n
+            currentDismissUrl = null;\n
+        }\n
+\n
+        async function poll() {\n
+            try {\n
+                const response = await fetch('http://localhost:8000/screen-pop/current', {headers: {'Accept': 'application/json'}});\n
+                if (! response.ok) {\n
+                    hide();\n
+                    return;\n
+                }\n
+\n
+                const payload = await response.json();\n
+                payload.screen_pop ? show(payload.screen_pop) : hide();\n
+            } catch (error) {\n
+                hide();\n
+            }\n
+        }\n
+\n
+        dismiss.addEventListener('click', async function () {\n
+            if (currentDismissUrl) {\n
+                await fetch(currentDismissUrl, {method: 'POST', headers: {'X-CSRF-TOKEN': csrf, 'Accept': 'application/json'}});\n
+            }\n
+            hide();\n
+        });\n
+\n
+        poll();\n
+        window.setInterval(poll, 10000);\n
+    })();\n
+&lt;/script&gt;\n
+&lt;/body&gt;\n
+&lt;/html&gt;\n
+' contains "Unmapped JustCall agents".
+
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:527
+C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php:253</failure>
+    </testcase>
+    <testcase name="test_normal_agent_cannot_access_monitoring" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="256" assertions="1" time="0.116156"/>
+    <testcase name="test_audit_record_created_for_reconciliation_actions" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="265" assertions="0" time="0.090620">
+      <error type="Illuminate\Database\QueryException">Tests\Feature\JustCallMonitoringTest::test_audit_record_created_for_reconciliation_actions
+Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 FOREIGN KEY constraint failed (SQL: insert into "leads" ("name", "phone", "owner_id", "lead_status_id", "lead_source_id", "created_by_id", "updated_by_id", "updated_at", "created_at") values (Audit Lead, +15550088, 1, 1, 1, 1, 1, 2026-08-16 13:41:11, 2026-08-16 13:41:11))
+
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:760
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:720
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:546
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Connection.php:498
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3322
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1869
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1330
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1295
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1138
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:986
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Support\helpers.php:319
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:987
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2330
+C:\xampp\htdocs\crm\laravel-crm\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2342
+C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php:275</error>
+    </testcase>
+    <testcase name="test_secrets_and_raw_auth_data_are_not_rendered_in_monitoring_views" class="Tests\Feature\JustCallMonitoringTest" classname="Tests.Feature.JustCallMonitoringTest" file="C:\xampp\htdocs\crm\laravel-crm\tests\Feature\JustCallMonitoringTest.php" line="300" assertions="3" time="0.105080"/>
+  </testsuite>
+</testsuites>

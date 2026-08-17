@@ -13,6 +13,7 @@
                     <p class="text-muted mb-0">Track deal value, stage, owner, and expected close date.</p>
                 </div>
                 <div class="d-flex gap-2">
+                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'opportunities') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a>@endcan
                     <a class="btn btn-outline-primary" href="{{ route('opportunities.pipeline') }}">Pipeline</a>
                     @can('opportunities.create')
                         <a class="btn btn-primary" href="{{ route('opportunities.create') }}">Create Opportunity</a>

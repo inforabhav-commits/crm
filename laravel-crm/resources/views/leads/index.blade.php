@@ -12,9 +12,10 @@
                     <h2 class="h5 mb-1">Lead Management</h2>
                     <p class="text-muted mb-0">Track lead ownership, status, source, and next follow-up.</p>
                 </div>
-                @can('leads.create')
-                    <a class="btn btn-primary" href="{{ route('leads.create') }}">Create Lead</a>
-                @endcan
+                <div class="d-flex gap-2">
+                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'leads') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a>@endcan
+                    @can('leads.create')<a class="btn btn-primary" href="{{ route('leads.create') }}">Create Lead</a>@endcan
+                </div>
             </div>
 
             <form class="row g-2" method="get" action="{{ route('leads.index') }}">

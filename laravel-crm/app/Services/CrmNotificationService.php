@@ -73,7 +73,10 @@ class CrmNotificationService
             ->where('status', 'pending')
             ->where('due_at', '<', today())
             ->get()
-            ->each(fn (Activity $activity) => $this->notifyActivity($activity, $user, 'activity-overdue:'.$activity->id.':'.today()->toDateString(), 'activity_overdue', 'Activity overdue'));
+            ->each(function (Activity $activity) use ($user) {
+                app(WorkflowRuleService::class)->dispatch($activity, 'activity_overdue', ['event_key' => 'activity-overdue:'.$activity->id.':'.today()->toDateString()], $user);
+                $this->notifyActivity($activity, $user, 'activity-overdue:'.$activity->id.':'.today()->toDateString(), 'activity_overdue', 'Activity overdue');
+            });
     }
 
     public function notifyMissedCallFollowUp(Activity $activity, CallLog $callLog): void

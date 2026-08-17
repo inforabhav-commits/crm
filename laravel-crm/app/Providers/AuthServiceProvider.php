@@ -63,8 +63,16 @@ class AuthServiceProvider extends ServiceProvider
             'calls.update',
             'calls.recordings.view',
             'audit.view',
+            'reports.view',
+            'import.leads',
+            'import.customers',
+            'export.crm',
+            'workflows.view',
+            'workflows.manage',
+            'ops.view',
             'justcall.view',
             'justcall.manage',
+            'justcall.monitor',
         ] as $permission) {
             Gate::define($permission, function ($user) use ($permission) {
                 return $user->hasPermission($permission);

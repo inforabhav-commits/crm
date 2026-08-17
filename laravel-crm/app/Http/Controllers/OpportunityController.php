@@ -109,6 +109,7 @@ class OpportunityController extends Controller
             return $opportunity;
         });
         $audit->created($opportunity, 'opportunity.created', 'Opportunity created.', $request->user(), $request);
+        app(\App\Services\WorkflowRuleService::class)->dispatch($opportunity, 'record_created', ['event_key' => 'opportunity-created:'.$opportunity->id], $request->user());
 
         return redirect()->route('opportunities.show', $opportunity)->with('status', 'Opportunity created.');
     }
@@ -164,6 +165,7 @@ class OpportunityController extends Controller
                 $history = $this->recordStageHistory($opportunity, $fromStageId, $opportunity->stage_id, $request->user()->id, $validated['stage_notes'] ?? null);
                 app(AuditService::class)->log('opportunity.stage_changed', $opportunity, 'Opportunity stage changed.', ['stage_id' => $fromStageId], ['stage_id' => $opportunity->stage_id, 'status' => $opportunity->status], $request->user(), $request);
                 app(CrmNotificationService::class)->notifyOpportunityStageChange($history);
+                app(\App\Services\WorkflowRuleService::class)->dispatch($opportunity->refresh(), 'opportunity_stage_changed', ['previous_stage' => $fromStageId, 'event_key' => 'opportunity-stage:'.$history->id], $request->user());
             }
         });
 
@@ -198,6 +200,7 @@ class OpportunityController extends Controller
                 $history = $this->recordStageHistory($opportunity, $fromStageId, $stage->id, $request->user()->id, $validated['stage_notes'] ?? null);
                 app(AuditService::class)->log('opportunity.stage_changed', $opportunity, 'Opportunity stage changed.', ['stage_id' => $fromStageId], ['stage_id' => $stage->id, 'status' => $opportunity->status], $request->user(), $request);
                 app(CrmNotificationService::class)->notifyOpportunityStageChange($history);
+                app(\App\Services\WorkflowRuleService::class)->dispatch($opportunity->refresh(), 'opportunity_stage_changed', ['previous_stage' => $fromStageId, 'event_key' => 'opportunity-stage:'.$history->id], $request->user());
             }
         });
 

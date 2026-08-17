@@ -141,7 +141,7 @@ class JustCallClient
     {
         $recordingUrl = trim($recordingUrl);
 
-        if (! filter_var($recordingUrl, FILTER_VALIDATE_URL)) {
+        if (! filter_var($recordingUrl, FILTER_VALIDATE_URL) || ! hash_equals('https', strtolower((string) parse_url($recordingUrl, PHP_URL_SCHEME)))) {
             return null;
         }
 

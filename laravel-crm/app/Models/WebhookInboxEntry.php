@@ -40,4 +40,41 @@ class WebhookInboxEntry extends Model
     {
         return $this->belongsTo(CallLog::class);
     }
+
+    public function toArray(): array
+    {
+        $data = parent::toArray();
+
+        if (isset($data['payload'])) {
+            $data['payload'] = $this->redactSensitiveKeys($data['payload']);
+        }
+
+        if (isset($data['normalized_payload'])) {
+            $data['normalized_payload'] = $this->redactSensitiveKeys($data['normalized_payload']);
+        }
+
+        return $data;
+    }
+
+    private function redactSensitiveKeys(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        foreach ($value as $key => $item) {
+            $lowerKey = strtolower((string) $key);
+
+            if (str_contains($lowerKey, 'secret') || str_contains($lowerKey, 'signature') || str_contains($lowerKey, 'token') || str_contains($lowerKey, 'api_key') || str_contains($lowerKey, 'authorization')) {
+                $value[$key] = '[REDACTED]';
+                continue;
+            }
+
+            if (is_array($item)) {
+                $value[$key] = $this->redactSensitiveKeys($item);
+            }
+        }
+
+        return $value;
+    }
 }

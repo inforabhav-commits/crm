@@ -45,6 +45,7 @@ class LeadAssignmentService
             );
 
             app(CrmNotificationService::class)->notifyLeadAssignment($history);
+            app(WorkflowRuleService::class)->dispatch($lead->refresh(), 'lead_assigned', ['event_key' => 'lead-assigned:'.$history->id], $assignedBy);
 
             return $lead->refresh();
         });

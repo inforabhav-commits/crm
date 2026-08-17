@@ -44,7 +44,9 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
-        ]
+        ],
+        "ops:preflight": "@php artisan ops:preflight",
+        "test:uat": "@php artisan test tests/Feature/UATCriticalFlowsTest.php"
     },
     "extra": {
         "laravel": {

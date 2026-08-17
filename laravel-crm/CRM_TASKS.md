@@ -28,20 +28,21 @@
 - [x] T24 - Recording access
 - [x] T25 - Incoming call screen-pop
 - [x] T26 - Missed-call automation
-- [ ] T27 - Integration monitoring & reconciliation
-- [~] T28 - Reports & dashboards
-- [ ] T29 - Import / export
-- [ ] T30 - Workflow rules
-- [~] T31 - Performance & security hardening
-- [ ] T32 - Backup / monitoring / recovery
-- [ ] T33 - UAT automation
-- [ ] T34 - Deployment & CI/CD
-- [ ] T35 - Phase 2 backlog
+- [x] T27 - Integration monitoring & reconciliation
+- [x] T28 - Reports & dashboards
+- [x] T29 - Import / export
+- [x] T30 - Workflow rules
+- [x] T31 - Performance & security hardening
+- [x] T32 - Backup / monitoring / recovery
+- [x] T33 - UAT automation
+- [x] T34 - Deployment & CI/CD
+- [x] T35 - Phase 2 backlog
 
 ## Current
 
-- Current Task: T27 - Integration monitoring & reconciliation
-- Next Task: T28 - Reports & dashboards
+- Current Task: None
+- Next Task: None
+- Roadmap Status: COMPLETE
 
 ## Previous L-task Mapping
 
@@ -96,5 +97,12 @@
 - Screen-pop matching reuses conservative phone matching with Contact > Customer > Lead priority; ambiguous callers show a safe possible-match state, unknown callers show phone/search context, and restricted record details are not exposed.
 - T26 added idempotent missed-call automation on confirmed normalized inbound missed events using existing `call_logs`, conservative phone matching, Activities, Notifications, and Audit logs.
 - Missed-call follow-ups are high-priority Activities due one hour after processing; unknown, ambiguous, restricted, unmapped, and later answered/completed calls are preserved with safe automation status instead of guessed assignment.
-- Reports/dashboards are partial only: dashboard shell exists and reports are still placeholder routes.
-- Performance/security hardening is partial only: auth/RBAC and validation exist, but production hardening, monitoring, backup, and CI/CD are not complete.
+- T28 added RBAC-protected real-data reports for lead funnel, source performance, lead aging, opportunity pipeline, won/lost opportunities, agent performance, activities/follow-ups, and call activity with date, owner, team, status/stage, source, direction, and call-status filters. Reports reuse existing visibility scopes and dashboard hierarchy/team filtering patterns.
+- T29 added permission-controlled CSV imports for leads, customers, and contacts with row-level summaries, master-value and relationship validation, duplicate prevention, permitted owner assignment, and audited imports. It added filtered CSV exports for leads, customers, contacts, opportunities, activities, and call logs using existing RBAC/hierarchy/team visibility scopes, explicit safe field allowlists, formula-injection sanitization, provider-secret exclusion, and audited exports. XLSX was not added because no suitable Laravel spreadsheet package exists in the current application.
+- T30 added a simple RBAC-protected workflow-rule foundation with structured JSON conditions/actions, priority and active status, durable execution history, idempotent event keys, safe failure recording, recursion protection, and admin CRUD/status history. Supported events include record creation/update, lead assignment/status changes, opportunity stage changes, and activity overdue scans. Actions reuse existing Activity and in-app Notification primitives plus narrowly permitted Lead/Opportunity updates and assignment.
+- T31 hardened sensitive boundaries with login and webhook rate limits, production-secure session cookies, stricter reconciliation visibility, HTTPS-only recording redirects, broader webhook secret redaction, generic provider failure summaries, workflow assignment reuse of existing authorization/history services, and justified indexes for report/list/inbox query patterns. Focused regression coverage protects authentication, webhook, recording, import/export, workflow, dashboard, report, and monitoring security boundaries.
+- T32 added a protected operational health page with safe database, storage, webhook backlog/failure, JustCall configuration, and failed workflow checks. It added a non-destructive timestamped PowerShell backup script for MySQL and `storage/app`, retention guidance, and `docs/OPERATIONS_RECOVERY.md` covering environment secrets, database/file restore, Laravel cache rebuild, migration verification, smoke checks, and rollback cautions. No automatic destructive restore or deployment automation was added.
+- T33 added compact end-to-end UAT coverage in `tests/Feature/UATCriticalFlowsTest.php` for authentication/RBAC, lead lifecycle and conversion, opportunity outcomes, agent workflow, mocked JustCall processing and reconciliation, import/export, workflow idempotency, and record isolation. `docs/UAT.md` documents scenarios, prerequisites, test roles, expected results, and manual production checks; `composer test:uat` runs the focused UAT suite.
+- T34 added production deployment documentation in `docs/DEPLOYMENT.md`, a production-safe `.env.example`, a PHP 8.1 GitHub Actions test workflow at `.github/workflows/tests.yml`, and the read-only `ops:preflight` Artisan command with a Composer shortcut. CI installs dependencies, prepares isolated SQLite testing, generates a test key, migrates, and runs PHPUnit; no production deployment or destructive operation is automated.
+- T35 created `docs/PHASE2_BACKLOG.md` as a categorized, prioritized roadmap only. No Phase 2 production implementation was started.
+- UI polish completed: the shared Blade CRM shell, dashboard, JustCall settings page, cards, forms, tables, badges, spacing, and responsive behavior now use a consistent professional SaaS visual system in `public/assets/css/crm.css`. No business logic or backend behavior changed.

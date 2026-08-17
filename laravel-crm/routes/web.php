@@ -4,12 +4,15 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CrmSettingsController;
+use App\Http\Controllers\Admin\JustCallMonitoringController;
 use App\Http\Controllers\Admin\JustCallSettingsController;
 use App\Http\Controllers\Admin\JustCallWebhookInboxController;
 use App\Http\Controllers\Admin\JustCallUserMappingController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WorkflowRuleController;
+use App\Http\Controllers\Admin\OperationalHealthController;
 use App\Http\Controllers\CallLogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CustomerController;
@@ -22,6 +25,8 @@ use App\Http\Controllers\JustCallClickToCallController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OpportunityController;
+use App\Http\Controllers\ImportExportController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ScreenPopController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,16 +34,20 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::post('/webhooks/justcall', JustCallWebhookController::class)->name('webhooks.justcall');
+Route::post('/webhooks/justcall', JustCallWebhookController::class)->middleware('throttle:justcall-webhook')->name('webhooks.justcall');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.store');
 });
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/reports', ReportsController::class)->name('reports.index');
+    Route::get('/import-export', [ImportExportController::class, 'index'])->name('import-export.index');
+    Route::post('/import-export', [ImportExportController::class, 'import'])->name('import-export.import');
+    Route::get('/export/{resource}', [ImportExportController::class, 'export'])->name('import-export.export');
     Route::get('/screen-pop/current', [ScreenPopController::class, 'current'])->name('screen-pop.current');
     Route::post('/screen-pop/{callLog}/dismiss', [ScreenPopController::class, 'dismiss'])->name('screen-pop.dismiss');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -98,6 +107,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/teams/create', [TeamController::class, 'create'])->name('admin.teams.create');
     Route::post('/admin/teams', [TeamController::class, 'store'])->name('admin.teams.store');
     Route::get('/admin/teams/{team}/edit', [TeamController::class, 'edit'])->name('admin.teams.edit');
+    Route::get('/admin/workflows', [WorkflowRuleController::class, 'index'])->name('admin.workflows.index');
+    Route::get('/admin/workflows/create', [WorkflowRuleController::class, 'create'])->name('admin.workflows.create');
+    Route::post('/admin/workflows', [WorkflowRuleController::class, 'store'])->name('admin.workflows.store');
+    Route::get('/admin/workflows/{workflowRule}/edit', [WorkflowRuleController::class, 'edit'])->name('admin.workflows.edit');
+    Route::put('/admin/workflows/{workflowRule}', [WorkflowRuleController::class, 'update'])->name('admin.workflows.update');
+    Route::patch('/admin/workflows/{workflowRule}/toggle', [WorkflowRuleController::class, 'toggle'])->name('admin.workflows.toggle');
+    Route::get('/admin/health', OperationalHealthController::class)->name('admin.health');
     Route::put('/admin/teams/{team}', [TeamController::class, 'update'])->name('admin.teams.update');
     Route::patch('/admin/teams/{team}/status', [TeamController::class, 'toggleStatus'])->name('admin.teams.status');
     Route::get('/admin/crm-settings', [CrmSettingsController::class, 'index'])->name('admin.crm-settings.index');
@@ -109,6 +125,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
     Route::get('/admin/justcall-settings', [JustCallSettingsController::class, 'index'])->name('admin.justcall-settings.index');
     Route::post('/admin/justcall-settings/test', [JustCallSettingsController::class, 'test'])->name('admin.justcall-settings.test');
+    Route::get('/admin/justcall-settings/monitoring', [JustCallMonitoringController::class, 'index'])->name('admin.justcall-monitoring.index');
+    Route::get('/admin/justcall-settings/monitoring/reconcile', [JustCallMonitoringController::class, 'reconcile'])->name('admin.justcall-monitoring.reconcile');
+    Route::post('/admin/justcall-settings/monitoring/reconcile', [JustCallMonitoringController::class, 'storeReconciliation'])->name('admin.justcall-monitoring.reconcile.store');
+    Route::post('/admin/justcall-settings/monitoring/reprocess', [JustCallMonitoringController::class, 'reprocess'])->name('admin.justcall-monitoring.reprocess');
     Route::get('/admin/justcall-settings/webhook-inbox', [JustCallWebhookInboxController::class, 'index'])->name('admin.justcall-webhooks.index');
     Route::post('/admin/justcall-settings/webhook-inbox/process', [JustCallWebhookInboxController::class, 'processPending'])->name('admin.justcall-webhooks.process');
     Route::get('/admin/justcall-settings/mappings', [JustCallUserMappingController::class, 'index'])->name('admin.justcall-mappings.index');

@@ -12,9 +12,10 @@
                     <h2 class="h5 mb-1">Customers / Accounts</h2>
                     <p class="text-muted mb-0">Manage customer accounts, ownership, profile notes, and contacts.</p>
                 </div>
-                @can('customers.create')
-                    <a class="btn btn-primary" href="{{ route('customers.create') }}">Create Customer</a>
-                @endcan
+                <div class="d-flex gap-2">
+                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'customers') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a>@endcan
+                    @can('customers.create')<a class="btn btn-primary" href="{{ route('customers.create') }}">Create Customer</a>@endcan
+                </div>
             </div>
 
             <form class="row g-2" method="get" action="{{ route('customers.index') }}">

@@ -39,7 +39,7 @@ class JustCallWebhookInboxProcessor
             $entry->forceFill([
                 'processing_status' => 'failed',
                 'processed_at' => now(),
-                'failure_summary' => str($exception->getMessage())->limit(255)->toString(),
+                'failure_summary' => 'JustCall webhook processing failed.',
             ])->save();
         }
 

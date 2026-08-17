@@ -44,4 +44,19 @@ class AuthFlowTest extends TestCase
         $this->get('/dashboard')
             ->assertRedirect('/login');
     }
+
+    public function test_login_attempts_are_rate_limited(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->post('/login', [
+                'email' => 'limited@example.com',
+                'password' => 'wrong-password',
+            ])->assertSessionHasErrors('email');
+        }
+
+        $this->post('/login', [
+            'email' => 'limited@example.com',
+            'password' => 'wrong-password',
+        ])->assertStatus(429);
+    }
 }

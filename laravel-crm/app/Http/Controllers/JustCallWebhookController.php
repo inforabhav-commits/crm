@@ -113,7 +113,9 @@ class JustCallWebhookController extends Controller
                 return str_contains($key, 'secret')
                     || str_contains($key, 'signature')
                     || str_contains($key, 'token')
-                    || str_contains($key, 'api_key');
+                    || str_contains($key, 'api_key')
+                    || str_contains($key, 'authorization')
+                    || str_contains($key, 'password');
             })
             ->map(fn ($value) => is_array($value) ? $this->safePayload($value) : $value)
             ->all();

@@ -145,6 +145,7 @@ class JustCallWebhookReceiverTest extends TestCase
     {
         $payload = $this->payload([
             'api_secret' => 'payload-secret',
+            'Authorization' => 'Bearer payload-authorization',
             'data' => [
                 'signature' => 'payload-signature',
                 'call_id' => 'call-123',
@@ -156,6 +157,7 @@ class JustCallWebhookReceiverTest extends TestCase
         $encoded = json_encode(WebhookInboxEntry::firstOrFail()->toArray());
         $this->assertStringNotContainsString($this->secret, $encoded);
         $this->assertStringNotContainsString('payload-secret', $encoded);
+        $this->assertStringNotContainsString('payload-authorization', $encoded);
         $this->assertStringNotContainsString('payload-signature', $encoded);
         $this->assertStringNotContainsString('x-justcall-signature', $encoded);
     }

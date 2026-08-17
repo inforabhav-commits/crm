@@ -3,6 +3,7 @@
 @section('content')
     <section class="card border-0 shadow-sm">
         <div class="card-body">
+            @can('export.crm')<div class="d-flex justify-content-end mb-3"><a class="btn btn-outline-primary" href="{{ route('import-export.export', 'calls') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a></div>@endcan
             <form class="row g-3 mb-4" method="get">
                 <div class="col-md-2">
                     <label class="form-label" for="direction">Direction</label>
