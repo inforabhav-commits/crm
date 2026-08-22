@@ -184,6 +184,8 @@ class MissedCallAutomationService
 
     private function safePhone(CallLog $callLog): string
     {
-        return str($callLog->customer_number ?: $callLog->from_number ?: 'Unknown caller')->limit(80)->toString();
+        $phone = $callLog->customer_number ?: $callLog->from_number;
+
+        return $phone ? app(PhonePrivacyService::class)->mask($phone) : 'Unknown caller';
     }
 }

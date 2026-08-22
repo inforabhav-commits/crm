@@ -17,7 +17,9 @@
 
     <div class="row g-3">
         @foreach ($stages as $stage)
-            @php($stageOpportunities = $opportunitiesByStage->get($stage->id, collect()))
+            @php
+                $stageOpportunities = $opportunitiesByStage->get($stage->id, collect());
+            @endphp
             <div class="col-lg-3 col-md-6">
                 <section class="card border-0 shadow-sm h-100">
                     <div class="card-body">

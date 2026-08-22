@@ -3,20 +3,49 @@
 namespace App\Services\Integrations\JustCall;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Throwable;
 
 class JustCallClient
 {
+    private const CACHE_KEY = 'justcall.last_connection_test';
+
     public function __construct(private ?JustCallConfig $config = null)
     {
         $this->config ??= JustCallConfig::fromConfig();
     }
 
+    /**
+     * Integration status combined with the real connectivity state from the
+     * last testConnection() run. Never reports "connected" merely because
+     * credentials are configured.
+     */
     public function status(): array
     {
-        return $this->config->status();
+        return $this->config->status() + $this->connectionState();
+    }
+
+    private function connectionState(): array
+    {
+        if (! $this->config->enabled()) {
+            return ['connection_state' => 'disabled', 'last_tested_at' => null];
+        }
+
+        if (! $this->config->credentialsConfigured()) {
+            return ['connection_state' => 'not_configured', 'last_tested_at' => null];
+        }
+
+        $cached = Cache::get(self::CACHE_KEY);
+        if (! $cached) {
+            return ['connection_state' => 'configured', 'last_tested_at' => null];
+        }
+
+        return [
+            'connection_state' => $cached['ok'] ? 'connected' : 'connection_failed',
+            'last_tested_at' => $cached['tested_at'] ?? null,
+        ];
     }
 
     public function testConnection(): array
@@ -43,21 +72,32 @@ class JustCallClient
             $response = $request->get($this->config->baseUrl().$this->config->testEndpoint());
 
             if ($response->successful()) {
-                return ['ok' => true, 'status' => $response->status(), 'message' => 'JustCall connection successful.'];
+                return $this->rememberTest(['ok' => true, 'status' => $response->status(), 'message' => 'JustCall connection successful.']);
             }
 
-            return [
+            return $this->rememberTest([
                 'ok' => false,
                 'status' => $response->status(),
                 'message' => 'JustCall returned HTTP '.$response->status().'.',
-            ];
+            ]);
         } catch (Throwable $exception) {
-            return [
+            return $this->rememberTest([
                 'ok' => false,
                 'status' => null,
                 'message' => 'JustCall connection failed: '.$this->safeError($exception->getMessage()),
-            ];
+            ]);
         }
+    }
+
+    private function rememberTest(array $result): array
+    {
+        Cache::forever(self::CACHE_KEY, [
+            'ok' => $result['ok'],
+            'status' => $result['status'],
+            'tested_at' => now()->toIso8601String(),
+        ]);
+
+        return $result;
     }
 
     public function listUsers(): array

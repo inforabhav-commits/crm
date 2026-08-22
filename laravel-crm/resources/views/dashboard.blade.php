@@ -44,21 +44,26 @@
 
     <div class="row g-3">
         @foreach ([
-            ['label' => 'My Leads', 'value' => $kpis['my_leads']],
-            ['label' => 'New Leads', 'value' => $kpis['new_leads']],
-            ['label' => 'Leads Requiring Follow-up', 'value' => $kpis['leads_requiring_follow_up']],
-            ['label' => "Today's Activities", 'value' => $kpis['today_activities']],
-            ['label' => 'Overdue Activities', 'value' => $kpis['overdue_activities']],
-            ['label' => 'Upcoming Follow-ups', 'value' => $kpis['upcoming_follow_ups']],
-            ['label' => 'Open Opportunities', 'value' => $kpis['open_opportunities']],
-            ['label' => 'Pipeline Value', 'value' => number_format((float) $kpis['pipeline_value'], 2)],
+            ['label' => 'My Leads', 'value' => $kpis['my_leads'], 'icon' => 'users'],
+            ['label' => 'New Leads', 'value' => $kpis['new_leads'], 'icon' => 'user-plus'],
+            ['label' => 'Leads Requiring Follow-up', 'value' => $kpis['leads_requiring_follow_up'], 'icon' => 'clipboard-list'],
+            ['label' => "Today's Activities", 'value' => $kpis['today_activities'], 'icon' => 'calendar-check'],
+            ['label' => 'Overdue Activities', 'value' => $kpis['overdue_activities'], 'icon' => 'triangle-alert'],
+            ['label' => 'Upcoming Follow-ups', 'value' => $kpis['upcoming_follow_ups'], 'icon' => 'calendar-clock'],
+            ['label' => 'Open Opportunities', 'value' => $kpis['open_opportunities'], 'icon' => 'briefcase-business'],
+            ['label' => 'Pipeline Value', 'value' => number_format((float) $kpis['pipeline_value'], 2), 'icon' => 'chart-no-axes-combined'],
         ] as $card)
             <div class="col-xl-3 col-md-6">
                 <section class="card crm-kpi-card h-100">
                     <div class="card-body">
                         <span class="crm-kpi-accent" aria-hidden="true"></span>
-                        <div class="crm-kpi-label">{{ $card['label'] }}</div>
-                        <div class="crm-kpi-value mt-2">{{ $card['value'] }}</div>
+                        <div class="d-flex align-items-start justify-content-between gap-2">
+                            <div>
+                                <div class="crm-kpi-label">{{ $card['label'] }}</div>
+                                <div class="crm-kpi-value mt-2">{{ $card['value'] }}</div>
+                            </div>
+                            <span class="crm-kpi-icon" aria-hidden="true"><i data-lucide="{{ $card['icon'] }}"></i></span>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -86,7 +91,7 @@
                                     <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ $item['url'] }}">Open</a></td>
                                 </tr>
                             @empty
-                                <tr><td class="text-muted" colspan="5">No work queue items.</td></tr>
+                                <tr><td colspan="5">@include('partials.empty-state', ['icon' => 'clipboard-list', 'title' => 'No work queue items', 'message' => 'Priority activities and follow-ups will appear here when they need attention.'])</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -105,7 +110,7 @@
                             <div class="small text-muted">To {{ $history->assignedTo?->name ?? 'Unassigned' }} by {{ $history->assignedBy?->name ?? '-' }} - {{ $history->assigned_at?->format('Y-m-d H:i') }}</div>
                         </div>
                     @empty
-                        <div class="text-muted">No recent assignments.</div>
+                        @include('partials.empty-state', ['icon' => 'users', 'title' => 'No recent assignments', 'message' => 'New lead assignments will appear here.'])
                     @endforelse
                 </div>
             </section>
@@ -119,7 +124,7 @@
                             <div class="small text-muted">{{ $opportunity->customer?->name ?? '-' }} - {{ $opportunity->currency }} {{ $opportunity->amount ?? '0.00' }} - {{ $opportunity->expected_close_date?->format('Y-m-d') ?? 'No close date' }}</div>
                         </div>
                     @empty
-                        <div class="text-muted">No open opportunities.</div>
+                        @include('partials.empty-state', ['icon' => 'briefcase-business', 'title' => 'No open opportunities', 'message' => 'Open deal records will appear here once opportunities are created.'])
                     @endforelse
                 </div>
             </section>

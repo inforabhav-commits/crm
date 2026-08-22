@@ -31,7 +31,7 @@
                 <div class="col-md-4">
                     <label class="border rounded d-block p-2">
                         <input type="checkbox" name="roles[]" value="{{ $role->id }}" @checked(in_array($role->id, old('roles', $selectedRoles), true))>
-                        {{ $role->name }}
+                        {{ $role->display_name }}
                     </label>
                 </div>
             @endforeach

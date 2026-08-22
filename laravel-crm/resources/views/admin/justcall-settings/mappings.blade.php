@@ -70,7 +70,9 @@
                         <thead><tr><th>CRM User</th><th>Suggested JustCall User</th><th>Reason</th><th class="text-end">Confirm</th></tr></thead>
                         <tbody>
                         @foreach ($suggestions as $userId => $match)
-                            @php($user = $users->firstWhere('id', $userId))
+                            @php
+                                $user = $users->firstWhere('id', $userId);
+                            @endphp
                             <tr>
                                 <td>{{ $user?->name }}<br><small class="text-muted">{{ $user?->email }}</small></td>
                                 <td>{{ $match['name'] ?? '-' }}<br><small class="text-muted">{{ $match['email'] ?? '-' }} / {{ $match['id'] }}</small></td>

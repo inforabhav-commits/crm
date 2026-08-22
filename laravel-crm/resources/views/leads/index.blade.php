@@ -1,6 +1,9 @@
 @extends('layouts.crm', ['title' => 'Leads'])
 
 @section('content')
+    @php
+        $phonePrivacy = app(\App\Services\PhonePrivacyService::class);
+    @endphp
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
@@ -12,15 +15,18 @@
                     <h2 class="h5 mb-1">Lead Management</h2>
                     <p class="text-muted mb-0">Track lead ownership, status, source, and next follow-up.</p>
                 </div>
-                <div class="d-flex gap-2">
-                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'leads') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a>@endcan
-                    @can('leads.create')<a class="btn btn-primary" href="{{ route('leads.create') }}">Create Lead</a>@endcan
+                <div class="d-flex flex-wrap gap-2">
+                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'leads') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"><i data-lucide="download" aria-hidden="true"></i><span>Export CSV</span></a>@endcan
+                    @can('leads.create')<a class="btn btn-primary" href="{{ route('leads.create') }}"><i data-lucide="plus" aria-hidden="true"></i><span>Create Lead</span></a>@endcan
                 </div>
             </div>
 
             <form class="row g-2" method="get" action="{{ route('leads.index') }}">
                 <div class="col-md-3">
-                    <input class="form-control" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search name, company, email, phone">
+                    <div class="crm-search-field">
+                        <i data-lucide="search" aria-hidden="true"></i>
+                        <input class="form-control" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search name, company, email, phone">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <select class="form-select" name="status">
@@ -81,12 +87,12 @@
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $lead->name }}</div>
-                                <small class="text-muted">{{ $lead->company ?: 'No company' }} · {{ $lead->email ?: $lead->phone ?: 'No contact' }}</small>
+                                <small class="text-muted">{{ $lead->company ?: 'No company' }} - {{ $lead->email ?: ($lead->phone ? $phonePrivacy->display($lead->phone, auth()->user()) : 'No contact') }}</small>
                             </td>
-                            <td>{{ $lead->status?->name ?? '-' }}</td>
+                            <td><span class="badge crm-status-badge crm-status-soft">{{ $lead->status?->name ?? '-' }}</span></td>
                             <td>{{ $lead->source?->name ?? '-' }}</td>
                             <td>{{ $lead->owner?->name ?? 'Unassigned' }}</td>
-                            <td>{{ ucfirst($lead->priority) }}</td>
+                            <td><span class="badge crm-status-badge crm-status-secondary">{{ ucfirst($lead->priority) }}</span></td>
                             <td>{{ $lead->next_follow_up_at?->format('Y-m-d H:i') ?? '-' }}</td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ route('leads.show', $lead) }}">View</a>
@@ -97,7 +103,16 @@
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-muted" colspan="7">No leads found.</td>
+                            <td colspan="7">
+                                @include('partials.empty-state', [
+                                    'icon' => 'users',
+                                    'title' => 'No leads found.',
+                                    'message' => 'Leads matching your filters will appear here.',
+                                    'actionUrl' => auth()->user()->can('leads.create') ? route('leads.create') : null,
+                                    'actionLabel' => 'Create Lead',
+                                    'actionIcon' => 'plus',
+                                ])
+                            </td>
                         </tr>
                     @endforelse
                     </tbody>

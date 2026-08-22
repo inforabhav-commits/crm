@@ -27,9 +27,27 @@
                 </div>
             </div>
 
+            @php
+                $connectionLabels = [
+                    'disabled' => ['CONFIGURATION DISABLED', 'text-bg-secondary'],
+                    'not_configured' => ['NOT CONFIGURED', 'text-bg-warning'],
+                    'configured' => ['CONFIGURED (UNVERIFIED)', 'text-bg-warning'],
+                    'connected' => ['CONNECTED', 'text-bg-success'],
+                    'connection_failed' => ['CONNECTION FAILED', 'text-bg-danger'],
+                ];
+                $connectionLabel = $connectionLabels[$status['connection_state']] ?? ['UNKNOWN', 'text-bg-secondary'];
+            @endphp
             <div class="row g-3">
+                <div class="col-sm-6 col-xl-4">
+                    <div class="crm-status-card border rounded-1 p-3 h-100">
+                        <div class="status-label">Integration Status</div>
+                        <div class="status-value mt-2"><span class="badge {{ $connectionLabel[1] }} rounded-1">{{ $connectionLabel[0] }}</span></div>
+                        @if ($status['last_tested_at'])
+                            <div class="text-muted small mt-1">Last tested: {{ \Illuminate\Support\Carbon::parse($status['last_tested_at'])->diffForHumans() }}</div>
+                        @endif
+                    </div>
+                </div>
                 @foreach ([
-                    'Integration Status' => [$status['enabled'], $status['enabled'] ? 'Enabled' : 'Disabled'],
                     'API Key' => [$status['api_key_configured'], $status['api_key_configured'] ? 'Configured' : 'Not Configured'],
                     'API Secret' => [$status['api_secret_configured'], $status['api_secret_configured'] ? 'Configured' : 'Not Configured'],
                     'Webhook Secret' => [$status['webhook_secret_configured'], $status['webhook_secret_configured'] ? 'Configured' : 'Not Configured'],

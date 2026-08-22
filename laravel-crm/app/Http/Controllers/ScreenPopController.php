@@ -8,6 +8,7 @@ use App\Models\Contact;
 use App\Models\Customer;
 use App\Models\Lead;
 use App\Services\CallLogMatcher;
+use App\Services\PhonePrivacyService;
 use Illuminate\Http\Request;
 
 class ScreenPopController extends Controller
@@ -47,6 +48,7 @@ class ScreenPopController extends Controller
         $match = $matcher->resolve($callLog->customer_number_normalized);
         $record = $this->visibleMatchedRecord($request, $callLog);
         $state = $record ? 'matched' : $match['state'];
+        $phonePrivacy = app(PhonePrivacyService::class);
 
         if ($match['state'] === 'matched' && ! $record) {
             $state = 'restricted';
@@ -55,13 +57,14 @@ class ScreenPopController extends Controller
         return [
             'id' => $callLog->id,
             'status' => $callLog->status,
-            'caller_phone' => e($callLog->customer_number ?: $callLog->from_number ?: $callLog->customer_number_normalized),
+            'caller_phone' => $phonePrivacy->mask($callLog->customer_number ?: $callLog->from_number ?: $callLog->customer_number_normalized),
             'match_state' => $state,
             'ambiguous_type' => $state === 'ambiguous' ? $match['type'] : null,
             'match_count' => $state === 'ambiguous' ? $match['count'] : null,
             'record' => $record,
-            'search_url' => route('leads.index', ['search' => $callLog->customer_number_normalized]),
+            'search_url' => route('leads.index'),
             'dismiss_url' => route('screen-pop.dismiss', $callLog),
+            'connected_since' => $callLog->answered_at?->toIso8601String(),
         ];
     }
 
@@ -72,9 +75,10 @@ class ScreenPopController extends Controller
 
             return [
                 'type' => 'Contact',
-                'name' => $contact->name,
+                'name' => $contact->customer?->name ?: $contact->name,
                 'owner' => $contact->customer?->owner?->name,
-                'url' => route('contacts.show', $contact),
+                'url' => $contact->customer ? route('customers.show', $contact->customer) : route('contacts.show', $contact),
+                'open_label' => $contact->customer ? 'Open Customer' : 'Open Contact',
                 'recent_activity' => $this->recentActivity(Contact::class, $contact->id),
             ];
         }
@@ -87,6 +91,7 @@ class ScreenPopController extends Controller
                 'name' => $customer->name,
                 'owner' => $customer->owner?->name,
                 'url' => route('customers.show', $customer),
+                'open_label' => 'Open Customer',
                 'recent_activity' => $this->recentActivity(Customer::class, $customer->id),
             ];
         }
@@ -99,6 +104,7 @@ class ScreenPopController extends Controller
                 'name' => $lead->name,
                 'owner' => $lead->owner?->name,
                 'url' => route('leads.show', $lead),
+                'open_label' => 'Open Lead',
                 'recent_activity' => $this->recentActivity(Lead::class, $lead->id),
             ];
         }

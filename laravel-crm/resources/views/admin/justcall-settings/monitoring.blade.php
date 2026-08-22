@@ -20,7 +20,9 @@
 
     <div class="row g-3 mb-4">
         @foreach ($summary as $label => $value)
-            @php($labelText = str_replace('_', ' ', $label))
+            @php
+                $labelText = str_replace('_', ' ', $label);
+            @endphp
             <div class="col-md-3">
                 <div class="border rounded p-3 h-100">
                     <div class="text-muted small text-capitalize">

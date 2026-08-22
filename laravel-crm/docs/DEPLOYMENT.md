@@ -28,9 +28,12 @@ From `laravel-crm/`:
 composer install --no-dev --prefer-dist --optimize-autoloader
 php artisan ops:preflight
 php artisan migrate --force
+php artisan db:seed --class=DatabaseSeeder --force
 ```
 
 Review migration output and database backups before applying migrations. The preflight command is read-only; it does not apply migrations.
+
+Roles and permissions (including `calls.view`/`calls.initiate` used by Click-to-Call) are defined in `DatabaseSeeder`, not in migrations. `DatabaseSeeder` only uses `firstOrCreate`/`syncWithoutDetaching`, so it is safe and non-destructive to run on every deployment (fresh or existing) — it will not duplicate permissions, remove existing role assignments, or reset the admin password of an already-existing user.
 
 ## Permissions and Document Root
 

@@ -1,6 +1,9 @@
 @extends('layouts.crm', ['title' => 'Contact Detail'])
 
 @section('content')
+    @php
+        $phonePrivacy = app(\App\Services\PhonePrivacyService::class);
+    @endphp
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
@@ -16,7 +19,7 @@
                     <a class="btn btn-outline-secondary" href="{{ route('contacts.index') }}">Back</a>
                     @can('calls.initiate')
                         @if ($canShowCallAction)
-                            <form method="post" action="{{ route('contacts.justcall.call', $contact) }}" data-click-to-call-form>
+                            <form method="post" action="{{ route('contacts.justcall.call', $contact) }}" data-click-to-call-form target="_blank" rel="noopener">
                                 @csrf
                                 <button class="btn btn-outline-primary" type="submit" data-click-to-call-button>Call</button>
                             </form>
@@ -37,8 +40,8 @@
                 <div class="col-md-3"><div class="text-muted small">Status</div><div>{{ $contact->is_active ? 'Active' : 'Inactive' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Primary</div><div>{{ $contact->is_primary ? 'Yes' : 'No' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Email</div><div>{{ $contact->email ?: '-' }}</div></div>
-                <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $contact->phone ?: '-' }}</div></div>
-                <div class="col-md-3"><div class="text-muted small">Mobile</div><div>{{ $contact->mobile ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $phonePrivacy->display($contact->phone, auth()->user()) }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Mobile</div><div>{{ $phonePrivacy->display($contact->mobile, auth()->user()) }}</div></div>
                 <div class="col-md-3">
                     <div class="text-muted small">Source Lead</div>
                     <div>

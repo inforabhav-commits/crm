@@ -4,7 +4,8 @@ return [
     'enabled' => (bool) env('JUSTCALL_ENABLED', false),
     'base_url' => env('JUSTCALL_BASE_URL', 'https://api.justcall.io'),
     'dialer_url' => env('JUSTCALL_DIALER_URL', 'https://app.justcall.io/dialer'),
-    'auth_mode' => env('JUSTCALL_AUTH_MODE', 'basic'),
+    // JustCall's official API docs require "Authorization: api_key:api_secret" (raw), not base64 HTTP Basic auth.
+    'auth_mode' => env('JUSTCALL_AUTH_MODE', 'raw'),
     'api_key' => env('JUSTCALL_API_KEY', ''),
     'api_secret' => env('JUSTCALL_API_SECRET', ''),
     'webhook_secret' => env('JUSTCALL_WEBHOOK_SECRET', ''),

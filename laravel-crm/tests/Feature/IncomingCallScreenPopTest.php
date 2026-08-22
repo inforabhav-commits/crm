@@ -144,7 +144,7 @@ class IncomingCallScreenPopTest extends TestCase
             ->getJson(route('screen-pop.current'))
             ->assertOk()
             ->assertJsonPath('screen_pop.status', 'ringing')
-            ->assertJsonPath('screen_pop.caller_phone', '+1 555 010 2000');
+            ->assertJsonPath('screen_pop.caller_phone', 'XXXXXXX2000');
     }
 
     public function test_other_agent_does_not_receive_it()
@@ -174,7 +174,8 @@ class IncomingCallScreenPopTest extends TestCase
             ->getJson(route('screen-pop.current'))
             ->assertJsonPath('screen_pop.match_state', 'matched')
             ->assertJsonPath('screen_pop.record.type', 'Contact')
-            ->assertJsonPath('screen_pop.record.name', $contact->name);
+            ->assertJsonPath('screen_pop.record.name', $customer->name)
+            ->assertJsonPath('screen_pop.record.open_label', 'Open Customer');
     }
 
     public function test_customer_match_shown()

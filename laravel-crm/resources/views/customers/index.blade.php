@@ -1,6 +1,9 @@
 @extends('layouts.crm', ['title' => 'Customers'])
 
 @section('content')
+    @php
+        $phonePrivacy = app(\App\Services\PhonePrivacyService::class);
+    @endphp
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
@@ -12,15 +15,18 @@
                     <h2 class="h5 mb-1">Customers / Accounts</h2>
                     <p class="text-muted mb-0">Manage customer accounts, ownership, profile notes, and contacts.</p>
                 </div>
-                <div class="d-flex gap-2">
-                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'customers') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a>@endcan
-                    @can('customers.create')<a class="btn btn-primary" href="{{ route('customers.create') }}">Create Customer</a>@endcan
+                <div class="d-flex flex-wrap gap-2">
+                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'customers') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"><i data-lucide="download" aria-hidden="true"></i><span>Export CSV</span></a>@endcan
+                    @can('customers.create')<a class="btn btn-primary" href="{{ route('customers.create') }}"><i data-lucide="plus" aria-hidden="true"></i><span>Create Customer</span></a>@endcan
                 </div>
             </div>
 
             <form class="row g-2" method="get" action="{{ route('customers.index') }}">
                 <div class="col-md-3">
-                    <input class="form-control" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search name, company, email, phone">
+                    <div class="crm-search-field">
+                        <i data-lucide="search" aria-hidden="true"></i>
+                        <input class="form-control" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search name, company, email, phone">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <select class="form-select" name="owner">
@@ -68,10 +74,10 @@
                                 <div class="fw-semibold">{{ $customer->name }}</div>
                                 <small class="text-muted">{{ $customer->company ?: 'No company' }}</small>
                             </td>
-                            <td>{{ $customer->email ?: $customer->phone ?: '-' }}</td>
+                            <td>{{ $customer->email ?: ($customer->phone ? $phonePrivacy->display($customer->phone, auth()->user()) : '-') }}</td>
                             <td>{{ $customer->industry ?: '-' }}</td>
                             <td>{{ $customer->owner?->name ?? 'Unassigned' }}</td>
-                            <td>{{ $customer->is_active ? 'Active' : 'Inactive' }}</td>
+                            <td><span class="badge crm-status-badge {{ $customer->is_active ? 'crm-status-success' : 'crm-status-secondary' }}">{{ $customer->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ route('customers.show', $customer) }}">View</a>
                                 @can('customers.edit')
@@ -81,7 +87,16 @@
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-muted" colspan="6">No customers found.</td>
+                            <td colspan="6">
+                                @include('partials.empty-state', [
+                                    'icon' => 'contact',
+                                    'title' => 'No customers found',
+                                    'message' => 'Customer accounts matching your filters will appear here.',
+                                    'actionUrl' => auth()->user()->can('customers.create') ? route('customers.create') : null,
+                                    'actionLabel' => 'Create Customer',
+                                    'actionIcon' => 'plus',
+                                ])
+                            </td>
                         </tr>
                     @endforelse
                     </tbody>

@@ -8,6 +8,7 @@ use App\Models\CrmMasterValue;
 use App\Models\Customer;
 use App\Services\AuditService;
 use App\Services\Integrations\JustCall\JustCallClickToCallService;
+use App\Services\PhonePrivacyService;
 use Illuminate\Http\Request;
 
 class ContactController extends Controller
@@ -22,11 +23,14 @@ class ContactController extends Controller
             ->latest();
 
         if ($search = trim((string) ($filters['search'] ?? ''))) {
-            $query->where(function ($subQuery) use ($search) {
+            $query->where(function ($subQuery) use ($search, $request) {
                 $subQuery->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
+
+                if (app(PhonePrivacyService::class)->canViewFullPhone($request->user())) {
+                    $subQuery->orWhere('phone', 'like', "%{$search}%");
+                }
             });
         }
 
@@ -69,6 +73,14 @@ class ContactController extends Controller
         $this->authorize('contacts.create');
 
         $validated = $this->validatedContact($request);
+        if (! app(PhonePrivacyService::class)->canViewFullPhone($request->user())) {
+            if (trim((string) ($validated['phone'] ?? '')) === '') {
+                $validated['phone'] = $contact->phone;
+            }
+            if (trim((string) ($validated['mobile'] ?? '')) === '') {
+                $validated['mobile'] = $contact->mobile;
+            }
+        }
         $this->abortIfCannotAccessCustomer($request, (int) $validated['customer_id']);
 
         $contact = Contact::create(array_merge($validated, [

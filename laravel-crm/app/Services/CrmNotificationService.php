@@ -87,7 +87,8 @@ class CrmNotificationService
             return;
         }
 
-        $caller = $callLog->customer_number ?: $callLog->from_number ?: 'Unknown caller';
+        $caller = $callLog->customer_number ?: $callLog->from_number;
+        $caller = $caller ? app(PhonePrivacyService::class)->mask($caller) : 'Unknown caller';
 
         $this->notifyOnce($recipient, 'missed-call:'.$callLog->id, [
             'category' => 'missed_call_follow_up',

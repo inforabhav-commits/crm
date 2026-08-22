@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -19,11 +21,16 @@ class AuthFlowTest extends TestCase
 
     public function test_user_can_login_open_dashboard_and_logout()
     {
-        User::create([
+        $role = Role::create(['name' => 'Agent', 'slug' => 'agent']);
+        $permission = Permission::create(['name' => 'View leads', 'slug' => 'leads.view']);
+        $role->permissions()->attach($permission);
+
+        $user = User::create([
             'name' => 'CRM Admin',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
         ]);
+        $user->roles()->attach($role);
 
         $this->post('/login', [
             'email' => 'admin@example.com',

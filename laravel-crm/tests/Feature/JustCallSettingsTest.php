@@ -163,4 +163,88 @@ class JustCallSettingsTest extends TestCase
         $this->assertStringNotContainsString('test-api-secret', $encoded);
         $this->assertStringNotContainsString('test-webhook-secret', $encoded);
     }
+
+    public function test_integration_status_is_disabled_when_not_enabled()
+    {
+        $this->configureJustCall(['enabled' => false]);
+        $admin = $this->userWithRole('super-admin');
+
+        $this->actingAs($admin)
+            ->get('/admin/justcall-settings')
+            ->assertOk()
+            ->assertSee('CONFIGURATION DISABLED');
+    }
+
+    public function test_integration_status_is_configured_but_unverified_before_any_test()
+    {
+        $this->configureJustCall();
+        $admin = $this->userWithRole('super-admin');
+
+        $this->actingAs($admin)
+            ->get('/admin/justcall-settings')
+            ->assertOk()
+            ->assertSee('CONFIGURED (UNVERIFIED)');
+    }
+
+    public function test_integration_status_becomes_connected_only_after_real_successful_test()
+    {
+        $this->configureJustCall();
+        $admin = $this->userWithRole('super-admin');
+        Http::fake([
+            'https://api.justcall.test/v2.1/users' => Http::response(['data' => []], 200),
+        ]);
+
+        $this->actingAs($admin)->post('/admin/justcall-settings/test');
+
+        $this->actingAs($admin)
+            ->get('/admin/justcall-settings')
+            ->assertOk()
+            ->assertSee('CONNECTED');
+    }
+
+    public function test_integration_status_shows_connection_failed_after_failed_test()
+    {
+        $this->configureJustCall();
+        $admin = $this->userWithRole('super-admin');
+        Http::fake([
+            'https://api.justcall.test/v2.1/users' => Http::response(['message' => 'Unauthorized'], 401),
+        ]);
+
+        $this->actingAs($admin)->post('/admin/justcall-settings/test');
+
+        $this->actingAs($admin)
+            ->get('/admin/justcall-settings')
+            ->assertOk()
+            ->assertSee('CONNECTION FAILED');
+    }
+
+    public function test_raw_auth_mode_sends_api_key_colon_secret_header_per_official_docs()
+    {
+        $this->configureJustCall(['auth_mode' => 'raw']);
+        $admin = $this->userWithRole('super-admin');
+        Http::fake([
+            'https://api.justcall.test/v2.1/users' => Http::response(['data' => []], 200),
+        ]);
+
+        $this->actingAs($admin)->post('/admin/justcall-settings/test')->assertSessionHas('status');
+
+        Http::assertSent(function ($request) {
+            return $request->hasHeader('Authorization', 'test-api-key:test-api-secret');
+        });
+    }
+
+    public function test_basic_auth_mode_remains_supported_for_legacy_configuration()
+    {
+        $this->configureJustCall(['auth_mode' => 'basic']);
+        $admin = $this->userWithRole('super-admin');
+        Http::fake([
+            'https://api.justcall.test/v2.1/users' => Http::response(['data' => []], 200),
+        ]);
+
+        $this->actingAs($admin)->post('/admin/justcall-settings/test')->assertSessionHas('status');
+
+        Http::assertSent(function ($request) {
+            return $request->hasHeader('Authorization', 'Basic '.base64_encode('test-api-key:test-api-secret'));
+        });
+    }
 }

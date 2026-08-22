@@ -12,6 +12,7 @@ use App\Models\Opportunity;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\PhonePrivacyService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -252,16 +253,27 @@ class ImportExportController extends Controller
     private function applyExportFilters(Builder $query, Request $request, string $resource): void
     {
         if ($request->filled('owner')) $query->where($resource === 'activities' ? 'assigned_user_id' : ($resource === 'calls' ? 'user_id' : 'owner_id'), $request->integer('owner'));
+        $canSearchPhone = app(PhonePrivacyService::class)->canViewFullPhone($request->user());
+
         if ($resource === 'leads') {
             if ($request->filled('status')) $query->where('lead_status_id', $request->integer('status'));
             if ($request->filled('source')) $query->where('lead_source_id', $request->integer('source'));
-            if ($request->filled('search')) $query->where(fn ($q) => $q->where('name', 'like', '%'.$request->string('search').'%')->orWhere('email', 'like', '%'.$request->string('search').'%'));
+            if ($request->filled('search')) $query->where(function ($q) use ($request, $canSearchPhone) {
+                $q->where('name', 'like', '%'.$request->string('search').'%')->orWhere('email', 'like', '%'.$request->string('search').'%');
+                if ($canSearchPhone) $q->orWhere('phone', 'like', '%'.$request->string('search').'%');
+            });
         } elseif ($resource === 'customers') {
-            if ($request->filled('search')) $query->where(fn ($q) => $q->where('name', 'like', '%'.$request->string('search').'%')->orWhere('company', 'like', '%'.$request->string('search').'%')->orWhere('email', 'like', '%'.$request->string('search').'%')->orWhere('phone', 'like', '%'.$request->string('search').'%'));
+            if ($request->filled('search')) $query->where(function ($q) use ($request, $canSearchPhone) {
+                $q->where('name', 'like', '%'.$request->string('search').'%')->orWhere('company', 'like', '%'.$request->string('search').'%')->orWhere('email', 'like', '%'.$request->string('search').'%');
+                if ($canSearchPhone) $q->orWhere('phone', 'like', '%'.$request->string('search').'%');
+            });
             if ($request->filled('industry')) $query->where('industry', 'like', '%'.$request->string('industry').'%');
             if ($request->filled('status')) $query->where('is_active', $request->boolean('status'));
         } elseif ($resource === 'contacts') {
-            if ($request->filled('search')) $query->where(fn ($q) => $q->where('first_name', 'like', '%'.$request->string('search').'%')->orWhere('last_name', 'like', '%'.$request->string('search').'%')->orWhere('email', 'like', '%'.$request->string('search').'%')->orWhere('phone', 'like', '%'.$request->string('search').'%'));
+            if ($request->filled('search')) $query->where(function ($q) use ($request, $canSearchPhone) {
+                $q->where('first_name', 'like', '%'.$request->string('search').'%')->orWhere('last_name', 'like', '%'.$request->string('search').'%')->orWhere('email', 'like', '%'.$request->string('search').'%');
+                if ($canSearchPhone) $q->orWhere('phone', 'like', '%'.$request->string('search').'%');
+            });
             if ($request->filled('customer')) $query->where('customer_id', $request->integer('customer'));
             if ($request->filled('status')) $query->where('is_active', $request->boolean('status'));
         } elseif ($resource === 'opportunities') {
@@ -314,13 +326,16 @@ class ImportExportController extends Controller
 
     private function exportRow($record, string $resource): array
     {
+        $phonePrivacy = app(PhonePrivacyService::class);
+        $user = request()->user();
+
         return match ($resource) {
-            'leads' => [$record->name, $record->company, $record->email, $record->phone, $record->status?->name, $record->source?->name, $record->owner?->name, $record->priority, $record->created_at],
-            'customers' => [$record->name, $record->company, $record->email, $record->phone, $record->website, $record->industry, $record->address, $record->owner?->name, $record->is_active ? 'yes' : 'no', $record->created_at],
-            'contacts' => [$record->first_name, $record->last_name, $record->title, $record->email, $record->phone, $record->mobile, $record->customer?->name, $record->is_active ? 'yes' : 'no', $record->created_at],
+            'leads' => [$record->name, $record->company, $record->email, $phonePrivacy->exportValue($record->phone, $user), $record->status?->name, $record->source?->name, $record->owner?->name, $record->priority, $record->created_at],
+            'customers' => [$record->name, $record->company, $record->email, $phonePrivacy->exportValue($record->phone, $user), $record->website, $record->industry, $record->address, $record->owner?->name, $record->is_active ? 'yes' : 'no', $record->created_at],
+            'contacts' => [$record->first_name, $record->last_name, $record->title, $record->email, $phonePrivacy->exportValue($record->phone, $user), $phonePrivacy->exportValue($record->mobile, $user), $record->customer?->name, $record->is_active ? 'yes' : 'no', $record->created_at],
             'opportunities' => [$record->name, $record->customer?->name, $record->stage?->name, $record->owner?->name, $record->amount, $record->currency, $record->probability, $record->status, $record->expected_close_date, $record->closed_at, $record->created_at],
             'activities' => [$record->subject, $record->type?->name, $record->status, $record->priority, $record->due_at, $record->assignedUser?->name, $record->related_type, $record->related_id, $record->created_at],
-            'calls' => [$record->external_call_id, $record->direction, $record->status, $record->user?->name, $record->customer_number, $record->started_at, $record->ended_at, $record->duration_seconds, $record->disposition, $record->crm_notes, $record->last_event_at],
+            'calls' => [$record->external_call_id, $record->direction, $record->status, $record->user?->name, $phonePrivacy->exportValue($record->customer_number, $user), $record->started_at, $record->ended_at, $record->duration_seconds, $record->disposition, $record->crm_notes, $record->last_event_at],
         };
     }
 

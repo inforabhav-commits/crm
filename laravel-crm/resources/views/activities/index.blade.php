@@ -12,9 +12,9 @@
                     <h2 class="h5 mb-1">Activities</h2>
                     <p class="text-muted mb-0">Track calls, emails, meetings, visits, and follow-ups.</p>
                 </div>
-                <div class="d-flex gap-2">
-                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'activities') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a>@endcan
-                    @can('activities.create')<a class="btn btn-primary" href="{{ route('activities.create') }}">Create Activity</a>@endcan
+                <div class="d-flex flex-wrap gap-2">
+                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'activities') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"><i data-lucide="download" aria-hidden="true"></i><span>Export CSV</span></a>@endcan
+                    @can('activities.create')<a class="btn btn-primary" href="{{ route('activities.create') }}"><i data-lucide="plus" aria-hidden="true"></i><span>Create Activity</span></a>@endcan
                 </div>
             </div>
 
@@ -114,7 +114,7 @@
                             </td>
                             <td>{{ $activity->type?->name ?? '-' }}</td>
                             <td>{{ $activity->assignedUser?->name ?? '-' }}</td>
-                            <td>{{ ucfirst($activity->status) }}</td>
+                            <td><span class="badge crm-status-badge crm-status-soft">{{ ucfirst($activity->status) }}</span></td>
                             <td class="{{ $activity->is_overdue ? 'text-danger fw-semibold' : '' }}">{{ $activity->due_at?->format('Y-m-d H:i') }}</td>
                             <td>
                                 @if ($activity->related instanceof \App\Models\Lead)
@@ -138,7 +138,16 @@
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-muted" colspan="7">No activities found.</td>
+                            <td colspan="7">
+                                @include('partials.empty-state', [
+                                    'icon' => 'clipboard-list',
+                                    'title' => 'No activities found',
+                                    'message' => 'Tasks, follow-ups, calls, and meetings matching your filters will appear here.',
+                                    'actionUrl' => auth()->user()->can('activities.create') ? route('activities.create') : null,
+                                    'actionLabel' => 'Create Activity',
+                                    'actionIcon' => 'plus',
+                                ])
+                            </td>
                         </tr>
                     @endforelse
                     </tbody>

@@ -1,4 +1,7 @@
 @csrf
+@php
+    $phonePrivacy = app(\App\Services\PhonePrivacyService::class);
+@endphp
 
 @if ($errors->any())
     <div class="alert alert-danger">{{ $errors->first() }}</div>
@@ -31,11 +34,11 @@
     </div>
     <div class="col-md-3">
         <label class="form-label" for="phone">Phone</label>
-        <input class="form-control" id="phone" name="phone" value="{{ old('phone', $contact->phone) }}" maxlength="50">
+        <input class="form-control" id="phone" name="phone" value="{{ old('phone', $phonePrivacy->editableValue($contact->phone, auth()->user())) }}" placeholder="{{ $phonePrivacy->editablePlaceholder($contact->phone, auth()->user()) }}" maxlength="50">
     </div>
     <div class="col-md-3">
         <label class="form-label" for="mobile">Mobile</label>
-        <input class="form-control" id="mobile" name="mobile" value="{{ old('mobile', $contact->mobile) }}" maxlength="50">
+        <input class="form-control" id="mobile" name="mobile" value="{{ old('mobile', $phonePrivacy->editableValue($contact->mobile, auth()->user())) }}" placeholder="{{ $phonePrivacy->editablePlaceholder($contact->mobile, auth()->user()) }}" maxlength="50">
     </div>
     <div class="col-md-6">
         <div class="form-check">

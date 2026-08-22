@@ -12,17 +12,22 @@
                     <h2 class="h5 mb-1">Opportunity Pipeline</h2>
                     <p class="text-muted mb-0">Track deal value, stage, owner, and expected close date.</p>
                 </div>
-                <div class="d-flex gap-2">
-                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'opportunities') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">Export CSV</a>@endcan
-                    <a class="btn btn-outline-primary" href="{{ route('opportunities.pipeline') }}">Pipeline</a>
+                <div class="d-flex flex-wrap gap-2">
+                    @can('export.crm')<a class="btn btn-outline-primary" href="{{ route('import-export.export', 'opportunities') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"><i data-lucide="download" aria-hidden="true"></i><span>Export CSV</span></a>@endcan
+                    <a class="btn btn-outline-primary" href="{{ route('opportunities.pipeline') }}"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i><span>Pipeline</span></a>
                     @can('opportunities.create')
-                        <a class="btn btn-primary" href="{{ route('opportunities.create') }}">Create Opportunity</a>
+                        <a class="btn btn-primary" href="{{ route('opportunities.create') }}"><i data-lucide="plus" aria-hidden="true"></i><span>Create Opportunity</span></a>
                     @endcan
                 </div>
             </div>
 
             <form class="row g-2" method="get" action="{{ route('opportunities.index') }}">
-                <div class="col-md-3"><input class="form-control" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search opportunity or customer"></div>
+                <div class="col-md-3">
+                    <div class="crm-search-field">
+                        <i data-lucide="search" aria-hidden="true"></i>
+                        <input class="form-control" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search opportunity or customer">
+                    </div>
+                </div>
                 <div class="col-md-2">
                     <select class="form-select" name="stage">
                         <option value="">All stages</option>
@@ -74,7 +79,7 @@
                             <td>{{ $opportunity->owner?->name ?? '-' }}</td>
                             <td>{{ $opportunity->currency }} {{ $opportunity->amount ?? '0.00' }}</td>
                             <td>{{ $opportunity->expected_close_date?->format('Y-m-d') ?? '-' }}</td>
-                            <td>{{ ucfirst($opportunity->status) }}</td>
+                            <td><span class="badge crm-status-badge {{ $opportunity->status === 'won' ? 'crm-status-success' : ($opportunity->status === 'lost' ? 'crm-status-danger' : 'crm-status-soft') }}">{{ ucfirst($opportunity->status) }}</span></td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ route('opportunities.show', $opportunity) }}">View</a>
                                 @can('opportunities.edit')
@@ -83,7 +88,18 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td class="text-muted" colspan="8">No opportunities found.</td></tr>
+                        <tr>
+                            <td colspan="8">
+                                @include('partials.empty-state', [
+                                    'icon' => 'briefcase-business',
+                                    'title' => 'No opportunities found',
+                                    'message' => 'Deals matching your filters will appear here.',
+                                    'actionUrl' => auth()->user()->can('opportunities.create') ? route('opportunities.create') : null,
+                                    'actionLabel' => 'Create Opportunity',
+                                    'actionIcon' => 'plus',
+                                ])
+                            </td>
+                        </tr>
                     @endforelse
                     </tbody>
                 </table>

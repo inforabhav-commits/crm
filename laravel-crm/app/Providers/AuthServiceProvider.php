@@ -49,6 +49,7 @@ class AuthServiceProvider extends ServiceProvider
             'activities.edit',
             'activities.complete',
             'customers.view',
+            'customers.view_full_phone',
             'customers.create',
             'customers.edit',
             'contacts.view',

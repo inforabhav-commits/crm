@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Lead;
 use App\Models\Opportunity;
 use App\Services\AuditService;
+use App\Services\PhonePrivacyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -68,6 +69,14 @@ class LeadConversionController extends Controller
             'opportunity_amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'expected_close_date' => ['nullable', 'date'],
         ]);
+        if (! app(PhonePrivacyService::class)->canViewFullPhone($request->user())) {
+            if (trim((string) ($validated['customer_phone'] ?? '')) === '') {
+                $validated['customer_phone'] = $lead->phone;
+            }
+            if (trim((string) ($validated['contact_phone'] ?? '')) === '') {
+                $validated['contact_phone'] = $lead->phone;
+            }
+        }
 
         try {
             DB::transaction(function () use ($request, $lead, $validated, $audit) {

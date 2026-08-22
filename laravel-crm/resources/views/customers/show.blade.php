@@ -1,33 +1,43 @@
 @extends('layouts.crm', ['title' => 'Customer 360'])
 
 @section('content')
+    @php
+        $phonePrivacy = app(\App\Services\PhonePrivacyService::class);
+    @endphp
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
 
-    <section class="card border-0 shadow-sm">
+    <section class="card border-0 shadow-sm crm-record-hero">
         <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
                 <div>
-                    <h2 class="h5 mb-1">{{ $customer->name }}</h2>
-                    <p class="text-muted mb-0">{{ $customer->company ?: 'No company recorded' }}</p>
+                    <div class="crm-record-kicker">Customer Summary</div>
+                    <h2 class="h4 mb-1">{{ $customer->name }}</h2>
+                    <p class="text-muted mb-2">{{ $customer->company ?: 'No company recorded' }}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge crm-status-badge {{ $customer->is_active ? 'crm-status-success' : 'crm-status-secondary' }}">{{ $customer->is_active ? 'Active' : 'Inactive' }}</span>
+                        <span class="badge crm-status-badge crm-status-soft">Owner: {{ $customer->owner?->name ?? 'Unassigned' }}</span>
+                    </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <a class="btn btn-outline-secondary" href="{{ route('customers.index') }}">Back</a>
                     @can('calls.initiate')
                         @if ($canShowCallAction)
-                            <form method="post" action="{{ route('customers.justcall.call', $customer) }}" data-click-to-call-form>
+                            <form method="post" action="{{ route('customers.justcall.call', $customer) }}" data-click-to-call-form target="_blank" rel="noopener">
                                 @csrf
-                                <button class="btn btn-outline-primary" type="submit" data-click-to-call-button>Call</button>
+                                <button class="btn btn-outline-primary" type="submit" data-click-to-call-button><i data-lucide="phone" aria-hidden="true"></i><span>Call</span></button>
                             </form>
                         @endif
                     @endcan
+                    @if ($customer->email)
+                        <a class="btn btn-outline-primary" href="mailto:{{ $customer->email }}"><i data-lucide="mail" aria-hidden="true"></i><span>Email</span></a>
+                    @endif
                     @can('activities.create')
-                        <a class="btn btn-outline-primary" href="{{ route('activities.create', ['customer_id' => $customer->id]) }}">Add Activity</a>
-                        <a class="btn btn-outline-primary" href="{{ route('activities.create', ['customer_id' => $customer->id]) }}">Add Follow-up</a>
+                        <a class="btn btn-outline-primary" href="{{ route('activities.create', ['customer_id' => $customer->id]) }}"><i data-lucide="clipboard-list" aria-hidden="true"></i><span>Add Activity</span></a>
                     @endcan
                     @can('contacts.create')
-                        <a class="btn btn-outline-primary" href="{{ route('contacts.create', ['customer_id' => $customer->id]) }}">Add Contact</a>
+                        <a class="btn btn-outline-primary" href="{{ route('contacts.create', ['customer_id' => $customer->id]) }}"><i data-lucide="plus" aria-hidden="true"></i><span>Add Contact</span></a>
                     @endcan
                     @can('customers.edit')
                         <a class="btn btn-primary" href="{{ route('customers.edit', $customer) }}">Edit</a>
@@ -35,12 +45,20 @@
                 </div>
             </div>
 
-            <div class="row g-3">
+            <div class="crm-record-tabs mb-3">
+                <a href="#overview">Overview</a>
+                <a href="#contacts">Contacts</a>
+                <a href="#activities">Activities</a>
+                <a href="#calls">Calls</a>
+                <a href="#notes">Notes</a>
+            </div>
+
+            <div class="row g-3" id="overview">
                 <div class="col-md-3"><div class="text-muted small">Owner</div><div>{{ $customer->owner?->name ?? 'Unassigned' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Primary Contact</div><div>{{ $primaryContact?->name ?? '-' }}</div></div>
-                <div class="col-md-3"><div class="text-muted small">Status</div><div>{{ $customer->is_active ? 'Active' : 'Inactive' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Status</div><div><span class="badge crm-status-badge {{ $customer->is_active ? 'crm-status-success' : 'crm-status-secondary' }}">{{ $customer->is_active ? 'Active' : 'Inactive' }}</span></div></div>
                 <div class="col-md-3"><div class="text-muted small">Email</div><div>{{ $customer->email ?: '-' }}</div></div>
-                <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $customer->phone ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $phonePrivacy->display($customer->phone, auth()->user()) }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Industry</div><div>{{ $customer->industry ?: '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Website</div><div>{{ $customer->website ?: '-' }}</div></div>
                 <div class="col-md-3">
@@ -55,13 +73,13 @@
                 </div>
                 <div class="col-md-3"><div class="text-muted small">Contacts</div><div>{{ $summary['contacts'] }} total / {{ $summary['active_contacts'] }} active</div></div>
                 <div class="col-md-3"><div class="text-muted small">Activities</div><div>{{ $summary['activities'] }} total / {{ $summary['pending_activities'] }} pending</div></div>
-                <div class="col-md-6"><div class="text-muted small">Address</div><div class="border rounded p-3 bg-light">{{ $customer->address ?: 'No address recorded.' }}</div></div>
-                <div class="col-md-6"><div class="text-muted small">Notes</div><div class="border rounded p-3 bg-light">{{ $customer->notes ?: 'No notes recorded.' }}</div></div>
+                <div class="col-md-6"><div class="text-muted small">Address</div><div class="crm-note-box">{{ $customer->address ?: 'No address recorded.' }}</div></div>
+                <div class="col-md-6" id="notes"><div class="text-muted small">Notes</div><div class="crm-note-box">{{ $customer->notes ?: 'No notes recorded.' }}</div></div>
             </div>
         </div>
     </section>
 
-    <div class="row g-4 mt-1">
+    <div class="row g-4 mt-1" id="contacts">
         <div class="col-lg-4">
             <section class="card border-0 shadow-sm h-100">
                 <div class="card-body">
@@ -71,12 +89,12 @@
                         <div class="text-muted">{{ $primaryContact->title ?: 'No title' }}</div>
                         <div class="mt-3 small">
                             <div><span class="text-muted">Email:</span> {{ $primaryContact->email ?: '-' }}</div>
-                            <div><span class="text-muted">Phone:</span> {{ $primaryContact->phone ?: '-' }}</div>
-                            <div><span class="text-muted">Mobile:</span> {{ $primaryContact->mobile ?: '-' }}</div>
+                            <div><span class="text-muted">Phone:</span> {{ $phonePrivacy->display($primaryContact->phone, auth()->user()) }}</div>
+                            <div><span class="text-muted">Mobile:</span> {{ $phonePrivacy->display($primaryContact->mobile, auth()->user()) }}</div>
                         </div>
                         <a class="btn btn-sm btn-outline-secondary mt-3" href="{{ route('contacts.show', $primaryContact) }}">View Contact</a>
                     @else
-                        <div class="text-muted">No primary contact recorded.</div>
+                        @include('partials.empty-state', ['icon' => 'user-round', 'title' => 'No primary contact', 'message' => 'Mark a contact as primary to surface it here.'])
                     @endif
                 </div>
             </section>
@@ -93,12 +111,12 @@
                                 <tr>
                                     <td>{{ $contact->name }} @if($contact->is_primary)<span class="badge text-bg-primary rounded-1">Primary</span>@endif</td>
                                     <td>{{ $contact->email ?: '-' }}</td>
-                                    <td>{{ $contact->phone ?: '-' }}</td>
+                                    <td>{{ $phonePrivacy->display($contact->phone, auth()->user()) }}</td>
                                     <td>{{ $contact->is_active ? 'Active' : 'Inactive' }}</td>
                                     <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ route('contacts.show', $contact) }}">View</a></td>
                                 </tr>
                             @empty
-                                <tr><td class="text-muted" colspan="5">No contacts recorded.</td></tr>
+                                <tr><td colspan="5">@include('partials.empty-state', ['icon' => 'contact', 'title' => 'No contacts recorded', 'message' => 'Contacts linked to this customer will appear here.'])</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -121,7 +139,7 @@
         </div>
     </div>
 
-    <div class="row g-4 mt-1">
+    <div class="row g-4 mt-1" id="activities">
         <div class="col-lg-6">
             <section class="card border-0 shadow-sm">
                 <div class="card-body">
@@ -132,7 +150,7 @@
                             <div class="small text-muted">{{ $activity->type?->name ?? 'Activity' }} - {{ $activity->due_at?->format('Y-m-d H:i') }} - {{ $activity->assignedUser?->name ?? '-' }}</div>
                         </div>
                     @empty
-                        <div class="text-muted">No upcoming follow-ups.</div>
+                        @include('partials.empty-state', ['icon' => 'calendar-clock', 'title' => 'No upcoming follow-ups', 'message' => 'Scheduled customer follow-ups will appear here.'])
                     @endforelse
                 </div>
             </section>
@@ -147,7 +165,7 @@
                             <div class="small text-muted">{{ $activity->type?->name ?? 'Activity' }} - {{ $activity->due_at?->format('Y-m-d H:i') }} - {{ $activity->assignedUser?->name ?? '-' }}</div>
                         </div>
                     @empty
-                        <div class="text-muted">No overdue follow-ups.</div>
+                        @include('partials.empty-state', ['icon' => 'clipboard-list', 'title' => 'No overdue follow-ups', 'message' => 'Overdue customer activity will appear here.'])
                     @endforelse
                 </div>
             </section>
@@ -191,7 +209,7 @@
                             <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ route('activities.show', $activity) }}">View</a></td>
                         </tr>
                     @empty
-                        <tr><td class="text-muted" colspan="6">No timeline entries yet.</td></tr>
+                        <tr><td colspan="6">@include('partials.empty-state', ['icon' => 'clipboard-list', 'title' => 'No timeline entries yet', 'message' => 'Customer activities and follow-ups will appear here.'])</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -199,7 +217,7 @@
         </div>
     </section>
 
-    <section class="card border-0 shadow-sm mt-4">
+    <section class="card border-0 shadow-sm mt-4" id="calls">
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h2 class="h5 mb-0">Call History</h2>

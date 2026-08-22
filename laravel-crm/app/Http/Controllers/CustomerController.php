@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Integrations\JustCall\JustCallClickToCallService;
+use App\Services\PhonePrivacyService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -25,11 +26,14 @@ class CustomerController extends Controller
             ->latest();
 
         if ($search = trim((string) ($filters['search'] ?? ''))) {
-            $query->where(function ($subQuery) use ($search) {
+            $query->where(function ($subQuery) use ($search, $request) {
                 $subQuery->where('name', 'like', "%{$search}%")
                     ->orWhere('company', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
+
+                if (app(PhonePrivacyService::class)->canViewFullPhone($request->user())) {
+                    $subQuery->orWhere('phone', 'like', "%{$search}%");
+                }
             });
         }
 
@@ -84,6 +88,9 @@ class CustomerController extends Controller
         $this->authorize('customers.create');
 
         $validated = $this->validatedCustomer($request);
+        if (! app(PhonePrivacyService::class)->canViewFullPhone($request->user()) && trim((string) ($validated['phone'] ?? '')) === '') {
+            $validated['phone'] = $customer->phone;
+        }
         $this->abortIfCannotAssignTo($request->user(), (int) $validated['owner_id']);
         $this->abortIfCannotUseLead($request, $validated['converted_from_lead_id'] ?? null);
 

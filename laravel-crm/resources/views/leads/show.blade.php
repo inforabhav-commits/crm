@@ -1,6 +1,9 @@
 @extends('layouts.crm', ['title' => 'Lead Detail'])
 
 @section('content')
+    @php
+        $phonePrivacy = app(\App\Services\PhonePrivacyService::class);
+    @endphp
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
@@ -19,7 +22,7 @@
                     <a class="btn btn-outline-secondary" href="{{ route('leads.index') }}">Back</a>
                     @can('calls.initiate')
                         @if ($canShowCallAction)
-                            <form method="post" action="{{ route('leads.justcall.call', $lead) }}" data-click-to-call-form>
+                            <form method="post" action="{{ route('leads.justcall.call', $lead) }}" data-click-to-call-form target="_blank" rel="noopener">
                                 @csrf
                                 <button class="btn btn-outline-primary" type="submit" data-click-to-call-button>Call</button>
                             </form>
@@ -37,7 +40,7 @@
                 <div class="col-md-3"><div class="text-muted small">Owner</div><div>{{ $lead->owner?->name ?? 'Unassigned' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Priority</div><div>{{ ucfirst($lead->priority) }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Email</div><div>{{ $lead->email ?: '-' }}</div></div>
-                <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $lead->phone ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $phonePrivacy->display($lead->phone, auth()->user()) }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Next Follow-up</div><div>{{ $lead->next_follow_up_at?->format('Y-m-d H:i') ?? '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Created By</div><div>{{ $lead->createdBy?->name ?? '-' }}</div></div>
                 <div class="col-12">
@@ -176,7 +179,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="customer_phone">Customer Phone</label>
-                            <input class="form-control" id="customer_phone" name="customer_phone" value="{{ old('customer_phone', $lead->phone) }}" maxlength="50">
+                            <input class="form-control" id="customer_phone" name="customer_phone" value="{{ old('customer_phone', $phonePrivacy->editableValue($lead->phone, auth()->user())) }}" placeholder="{{ $phonePrivacy->editablePlaceholder($lead->phone, auth()->user()) }}" maxlength="50">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="contact_first_name">Contact First Name</label>
@@ -192,7 +195,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="contact_phone">Contact Phone</label>
-                            <input class="form-control" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', $lead->phone) }}" maxlength="50">
+                            <input class="form-control" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', $phonePrivacy->editableValue($lead->phone, auth()->user())) }}" placeholder="{{ $phonePrivacy->editablePlaceholder($lead->phone, auth()->user()) }}" maxlength="50">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="opportunity_name">Opportunity Name</label>
@@ -312,14 +315,9 @@
             <section class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
                     <h2 class="h5 mb-3">Follow-ups</h2>
-                    @php
-                        $pendingActivities = $lead->activities->where('status', 'pending');
-                        $overdueActivities = $pendingActivities->filter(fn ($activity) => $activity->is_overdue);
-                        $upcomingActivities = $pendingActivities->reject(fn ($activity) => $activity->is_overdue)->sortBy('due_at')->take(5);
-                    @endphp
                     <div class="mb-3">
                         <div class="fw-semibold text-danger mb-2">Overdue</div>
-                        @forelse ($overdueActivities->take(5) as $activity)
+                        @forelse ($overdueActivities as $activity)
                             <div class="border-bottom pb-2 mb-2">
                                 <a href="{{ route('activities.show', $activity) }}">{{ $activity->subject }}</a>
                                 <div class="small text-muted">{{ $activity->due_at?->format('Y-m-d H:i') }}</div>

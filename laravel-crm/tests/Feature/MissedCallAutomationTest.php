@@ -156,6 +156,8 @@ class MissedCallAutomationTest extends TestCase
         $this->assertSame($lead->id, $activity->related_id);
         $this->assertSame($agent->id, $activity->assigned_user_id);
         $this->assertSame('Missed Call', $activity->subject);
+        $this->assertStringContainsString('XXXXXXX2000', $activity->description);
+        $this->assertStringNotContainsString('+1 555 010 2000', $activity->description);
         $this->assertTrue($activity->due_at->equalTo(now()->addHour()->startOfMinute()));
     }
 
@@ -168,7 +170,10 @@ class MissedCallAutomationTest extends TestCase
         $this->processEvent();
 
         $this->assertDatabaseCount('notifications', 1);
-        $this->assertSame('missed_call_follow_up', $agent->notifications()->first()->data['category']);
+        $notification = $agent->notifications()->first();
+        $this->assertSame('missed_call_follow_up', $notification->data['category']);
+        $this->assertStringContainsString('XXXXXXX2000', $notification->data['message']);
+        $this->assertStringNotContainsString('+1 555 010 2000', $notification->data['message']);
     }
 
     public function test_duplicate_event_does_not_duplicate_follow_up_or_notification()

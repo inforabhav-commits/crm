@@ -9,6 +9,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Integrations\JustCall\JustCallClickToCallService;
+use App\Services\PhonePrivacyService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -24,11 +25,14 @@ class LeadController extends Controller
             ->latest();
 
         if ($search = trim((string) ($filters['search'] ?? ''))) {
-            $query->where(function ($subQuery) use ($search) {
+            $query->where(function ($subQuery) use ($search, $request) {
                 $subQuery->where('name', 'like', "%{$search}%")
                     ->orWhere('company', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
+
+                if (app(PhonePrivacyService::class)->canViewFullPhone($request->user())) {
+                    $subQuery->orWhere('phone', 'like', "%{$search}%");
+                }
             });
         }
 
@@ -88,6 +92,8 @@ class LeadController extends Controller
         $this->authorize('leads.view');
         $this->abortIfCannotAccessLead($request->user(), $lead);
 
+        $pendingActivities = $lead->activities->where('status', 'pending');
+
         return view('leads.show', [
             'lead' => $lead->load([
                 'status',
@@ -116,6 +122,8 @@ class LeadController extends Controller
                 ->latest('last_event_at')
                 ->take(10)
                 ->get(),
+            'overdueActivities' => $pendingActivities->filter(fn ($activity) => $activity->is_overdue)->take(5),
+            'upcomingActivities' => $pendingActivities->reject(fn ($activity) => $activity->is_overdue)->sortBy('due_at')->take(5),
             'canShowCallAction' => $clickToCall->canShowFor($lead),
         ]);
     }
@@ -134,6 +142,9 @@ class LeadController extends Controller
         $this->abortIfCannotAccessLead($request->user(), $lead);
 
         $validated = $this->validatedLead($request);
+        if (! app(PhonePrivacyService::class)->canViewFullPhone($request->user()) && trim((string) ($validated['phone'] ?? '')) === '') {
+            $validated['phone'] = $lead->phone;
+        }
         $ownerId = $this->resolveOwnerId($request, $validated);
         $before = $lead->getAttributes();
         $previousStatus = $lead->status?->slug;

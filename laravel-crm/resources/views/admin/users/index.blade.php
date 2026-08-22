@@ -38,7 +38,7 @@
                         <tr>
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
-                            <td>{{ $user->roles->pluck('name')->join(', ') ?: 'None' }}</td>
+                            <td>{{ $user->roles->pluck('display_name')->join(', ') ?: 'None' }}</td>
                             <td>{{ $user->teams->pluck('name')->join(', ') ?: 'None' }}</td>
                             <td>{{ $user->manager?->name ?? '-' }}</td>
                             <td>

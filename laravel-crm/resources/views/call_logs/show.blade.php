@@ -1,6 +1,9 @@
 @extends('layouts.crm', ['title' => 'Call Detail'])
 
 @section('content')
+    @php
+        $phonePrivacy = app(\App\Services\PhonePrivacyService::class);
+    @endphp
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
@@ -24,7 +27,7 @@
             <div class="row g-3">
                 <div class="col-md-3"><div class="text-muted small">Status</div><div>{{ $callLog->status ? ucfirst($callLog->status) : '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Agent</div><div>{{ $callLog->user?->name ?? ($callLog->agent_external_id ?: '-') }}</div></div>
-                <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $callLog->customer_number ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $phonePrivacy->callNumber($callLog, auth()->user()) }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Duration</div><div>{{ $callLog->duration_seconds !== null ? gmdate('H:i:s', $callLog->duration_seconds) : '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Provider Disposition</div><div>{{ $callLog->provider_disposition ?: '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">CRM Disposition</div><div>{{ $callLog->crm_disposition ?: '-' }}</div></div>

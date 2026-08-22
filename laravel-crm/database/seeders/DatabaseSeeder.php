@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
             'activities.edit' => 'Edit activities',
             'activities.complete' => 'Complete activities',
             'customers.view' => 'View customers',
+            'customers.view_full_phone' => 'View full customer phone numbers',
             'customers.create' => 'Create customers',
             'customers.edit' => 'Edit customers',
             'contacts.view' => 'View contacts',
