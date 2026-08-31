@@ -67,15 +67,17 @@ class JustCallCallEventNormalizer
             'customer_number' => $customer['original'],
             'customer_number_normalized' => $customer['normalized'],
             'customer_number_comparison' => $customer['comparison'],
-            'started_at' => $this->timestamp($this->firstValue($data, ['started_at', 'start_time', 'call_started_at', 'created_at'])),
+            'started_at' => $this->timestamp($this->firstValue($data, ['started_at', 'start_time', 'call_started_at', 'created_at', 'call_started_at']))
+                ?: $this->dateAndTime($data, ['call_date', 'call_user_date'], ['call_time', 'call_user_time']),
             'answered_at' => $this->timestamp($this->firstValue($data, ['answered_at', 'answer_time', 'call_answered_at'])),
-            'ended_at' => $this->timestamp($this->firstValue($data, ['ended_at', 'end_time', 'call_ended_at', 'completed_at'])),
-            'duration_seconds' => $this->duration($this->firstValue($data, ['duration_seconds', 'duration', 'call_duration'])),
-            'disposition' => $this->stringValue($this->firstValue($data, ['disposition', 'call_disposition'])),
-            'notes' => $this->stringValue($this->firstValue($data, ['notes', 'note', 'comments'])),
+            'ended_at' => $this->timestamp($this->firstValue($data, ['ended_at', 'end_time', 'call_ended_at', 'completed_at']))
+                ?: ($eventType === 'call.completed' || $eventType === 'call.missed' ? $this->dateAndTime($data, ['call_date', 'call_user_date'], ['call_time', 'call_user_time']) : null),
+            'duration_seconds' => $this->duration($this->firstValue($data, ['duration_seconds', 'duration', 'call_duration.total_duration', 'call_duration.conversation_time', 'call_duration.handle_time', 'call_duration'])),
+            'disposition' => $this->stringValue($this->firstValue($data, ['disposition', 'call_disposition', 'call_info.disposition'])),
+            'notes' => $this->stringValue($this->firstValue($data, ['notes', 'note', 'comments', 'call_info.notes'])),
             'recording_reference' => $this->stringValue($this->firstValue($data, ['recording_id', 'recording_reference', 'recording.reference', 'recording.id'])),
-            'recording_url' => $this->stringValue($this->firstValue($data, ['recording_url', 'recording_link', 'recording.url', 'recording', 'call_info.recording'])),
-            'recording_duration_seconds' => $this->duration($this->firstValue($data, ['recording_duration_seconds', 'recording.duration', 'recording_duration'])),
+            'recording_url' => $this->stringValue($this->firstValue($data, ['recording_url', 'recording_link', 'recording.url', 'recording', 'call_info.recording', 'call_info.recording_child'])),
+            'recording_duration_seconds' => $this->duration($this->firstValue($data, ['recording_duration_seconds', 'recording.duration', 'recording_duration', 'call_duration.conversation_time', 'call_duration.total_duration'])),
             'raw_event_type' => $rawEventType,
             'normalized_at' => now()->toISOString(),
         ];
@@ -90,7 +92,7 @@ class JustCallCallEventNormalizer
         $type = Str::of($rawEventType)->lower()->replace(['_', '-', ' '], '.')->squish()->toString();
 
         return match (true) {
-            str_contains($type, 'missed') => 'call.missed',
+            str_contains($type, 'missed') || str_contains($type, 'voicemail') => 'call.missed',
             str_contains($type, 'answered') || str_contains($type, 'answer') => 'call.answered',
             str_contains($type, 'completed') || str_contains($type, 'ended') || str_contains($type, 'end') => 'call.completed',
             str_contains($type, 'incoming') || str_contains($type, 'ringing') => 'call.ringing',
@@ -102,7 +104,7 @@ class JustCallCallEventNormalizer
 
     private function direction(array $data, ?string $rawEventType): string
     {
-        $value = $this->stringValue($this->firstValue($data, ['direction', 'call_direction', 'type']));
+        $value = $this->stringValue($this->firstValue($data, ['direction', 'call_direction', 'type', 'call_info.direction']));
         $haystack = strtolower(trim(($value ?? '').' '.($rawEventType ?? '')));
 
         if (str_contains($haystack, 'outbound') || str_contains($haystack, 'outgoing')) {
@@ -189,5 +191,17 @@ class JustCallCallEventNormalizer
         }
 
         return null;
+    }
+
+    private function dateAndTime(array $data, array $dateKeys, array $timeKeys): ?string
+    {
+        $date = $this->stringValue($this->firstValue($data, $dateKeys));
+        $time = $this->stringValue($this->firstValue($data, $timeKeys));
+
+        if (! $date) {
+            return null;
+        }
+
+        return $this->timestamp(trim($date.' '.($time ?: '00:00:00')));
     }
 }

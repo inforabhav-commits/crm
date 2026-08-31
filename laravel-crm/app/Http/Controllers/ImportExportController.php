@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redirect;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use ZipArchive;
 
 class ImportExportController extends Controller
 {
@@ -45,18 +46,20 @@ class ImportExportController extends Controller
         ]);
 
         $file = $request->file('file');
-        abort_if(strtolower($file->getClientOriginalExtension()) !== 'csv', 422, 'Only CSV files are supported.');
-        abort_if($file->getSize() > 10 * 1024 * 1024, 422, 'The CSV file is too large.');
+        $extension = strtolower($file->getClientOriginalExtension());
+        abort_unless(in_array($extension, ['csv', 'xlsx'], true), 422, 'Only CSV and XLSX files are supported.');
+        abort_if($file->getSize() > 10 * 1024 * 1024, 422, 'The import file is too large.');
 
-        $rows = $this->readCsv($file->getRealPath());
+        $rows = $this->readRows($file->getRealPath(), $extension);
         $summary = match ($validated['resource']) {
             'leads' => $this->importLeads($rows, $request->user()),
             'customers' => $this->importCustomers($rows, $request->user()),
             'contacts' => $this->importContacts($rows, $request->user()),
         };
 
-        $audit->log('crm.imported', null, 'CRM CSV import completed.', null, [
+        $audit->log('crm.imported', null, 'CRM import completed.', null, [
             'resource' => $validated['resource'],
+            'format' => $extension,
             'imported' => $summary['imported'],
             'errors' => count($summary['errors']),
         ], $request->user(), $request);
@@ -122,22 +125,28 @@ class ImportExportController extends Controller
 
     private function importCustomers(array $rows, User $user): array
     {
+        $rows = $this->normalizeCustomerRows($rows);
+
         return $this->importRows($rows, function (array $data, int $row) use ($user) {
             $name = $this->value($data, ['name', 'customer_name']);
+            $customerId = $this->value($data, ['customer_id']);
+            if ($name === '' && $customerId !== '') {
+                $name = 'Customer '.$customerId;
+            }
             if ($name === '') throw new \RuntimeException('Name is required.');
             $email = strtolower($this->value($data, ['email']));
-            $phone = $this->value($data, ['phone', 'phone_number']);
-            $this->assertNoDuplicate(Customer::query(), $email, $phone, $row);
+            $phone = $this->value($data, ['phone', 'phone_number', 'phone_no', 'phone_num']);
+            $this->assertNoDuplicate(Customer::query(), $email, $phone, $row, $customerId);
             $owner = $this->resolveOwner($this->value($data, ['owner', 'owner_email', 'owner_id']), $user);
             Customer::create([
                 'name' => $name,
-                'company' => $this->value($data, ['company']),
+                'company' => $this->value($data, ['company', 'business_name']) ?: null,
                 'email' => $email ?: null,
                 'phone' => $phone ?: null,
-                'website' => $this->value($data, ['website']),
-                'industry' => $this->value($data, ['industry']),
-                'address' => $this->value($data, ['address']),
-                'notes' => $this->value($data, ['notes']),
+                'website' => $this->value($data, ['website']) ?: null,
+                'industry' => $this->value($data, ['industry']) ?: null,
+                'address' => $this->value($data, ['address', 'billing_address']) ?: null,
+                'notes' => $this->customerNotes($data),
                 'owner_id' => $owner->id,
                 'is_active' => true,
                 'created_by_id' => $user->id,
@@ -193,6 +202,81 @@ class ImportExportController extends Controller
         return $summary;
     }
 
+    private function normalizeCustomerRows(array $rows): array
+    {
+        if (count($rows) < 2) {
+            return $rows;
+        }
+
+        $headers = array_map(fn ($header) => $this->normalizeHeader($header), $rows[0]);
+        if (array_intersect($headers, ['name', 'customer_name'])) {
+            return $rows;
+        }
+
+        $dataRows = array_values(array_filter($rows, function (array $row, int $index) {
+            if ($index === 0) {
+                return false;
+            }
+
+            return $this->looksLikeHeaderlessCustomerRow($row);
+        }, ARRAY_FILTER_USE_BOTH));
+
+        if ($dataRows === []) {
+            return $rows;
+        }
+
+        return array_merge([$this->headerlessCustomerHeaders()], $dataRows);
+    }
+
+    private function looksLikeHeaderlessCustomerRow(array $row): bool
+    {
+        $customerId = trim((string) ($row[0] ?? ''));
+        $name = trim((string) ($row[1] ?? ''));
+        $phone = $this->phone((string) ($row[4] ?? ''));
+        $amount = trim((string) ($row[11] ?? ''));
+
+        return $customerId !== ''
+            && (is_numeric($customerId) || $name !== '' || $phone !== '')
+            && ($name !== '' || $phone !== '' || $amount !== '');
+    }
+
+    private function headerlessCustomerHeaders(): array
+    {
+        return [
+            'Customer ID',
+            'Name',
+            'Email',
+            'Business Name',
+            'Phone No',
+            'Billing Address',
+            'Reserved 1',
+            'Reserved 2',
+            'Reserved 3',
+            'Reserved 4',
+            'Date',
+            'Amount',
+            'Plan',
+            'Software',
+            'Product Number',
+            'License Number',
+            'Cloud Customer',
+            'Reserved 5',
+            'Reserved 6',
+            'Reserved 7',
+            'Issue',
+            'Sale Type',
+            'No of Cases',
+            'Payment Type',
+            'Last 4',
+            'Owner',
+        ];
+    }
+
+    private function readRows(string $path, string $extension): array
+    {
+        return $extension === 'xlsx' ? $this->readXlsx($path) : $this->readCsv($path);
+    }
+
     private function readCsv(string $path): array
     {
         $handle = fopen($path, 'rb');
@@ -201,6 +285,108 @@ class ImportExportController extends Controller
         while (($row = fgetcsv($handle)) !== false) $rows[] = $row;
         fclose($handle);
         return $rows;
+    }
+
+    private function readXlsx(string $path): array
+    {
+        $zip = new ZipArchive();
+        abort_unless($zip->open($path) === true, 422, 'The XLSX file could not be read.');
+
+        try {
+            $sharedStrings = $this->xlsxSharedStrings($zip);
+            $sheetPath = $this->firstWorksheetPath($zip);
+            abort_unless($sheetPath, 422, 'The XLSX file does not contain a worksheet.');
+
+            $xml = simplexml_load_string($zip->getFromName($sheetPath));
+            abort_unless($xml, 422, 'The XLSX worksheet could not be read.');
+
+            $rows = [];
+            foreach ($xml->sheetData->row as $row) {
+                $values = [];
+                foreach ($row->c as $cell) {
+                    $reference = (string) $cell['r'];
+                    $column = $this->xlsxColumnIndex($reference);
+                    if ($column === null) {
+                        $column = count($values);
+                    }
+                    $values[$column] = $this->xlsxCellValue($cell, $sharedStrings);
+                }
+
+                if ($values !== []) {
+                    ksort($values);
+                    $rows[] = array_map(fn ($value) => (string) $value, $values + array_fill(0, max(array_keys($values)) + 1, ''));
+                }
+            }
+
+            return $rows;
+        } finally {
+            $zip->close();
+        }
+    }
+
+    private function xlsxSharedStrings(ZipArchive $zip): array
+    {
+        $content = $zip->getFromName('xl/sharedStrings.xml');
+        if ($content === false) {
+            return [];
+        }
+
+        $xml = simplexml_load_string($content);
+        if (! $xml) {
+            return [];
+        }
+
+        $strings = [];
+        foreach ($xml->si as $item) {
+            $text = '';
+            foreach ($item->xpath('.//t') ?: [] as $part) {
+                $text .= (string) $part;
+            }
+            $strings[] = $text;
+        }
+
+        return $strings;
+    }
+
+    private function firstWorksheetPath(ZipArchive $zip): ?string
+    {
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $name = $zip->getNameIndex($index);
+            if (preg_match('/^xl\/worksheets\/sheet\d+\.xml$/', $name)) {
+                return $name;
+            }
+        }
+
+        return null;
+    }
+
+    private function xlsxCellValue(\SimpleXMLElement $cell, array $sharedStrings): string
+    {
+        $type = (string) $cell['t'];
+        if ($type === 'inlineStr') {
+            return trim((string) ($cell->is->t ?? ''));
+        }
+
+        $value = trim((string) ($cell->v ?? ''));
+        if ($type === 's' && $value !== '') {
+            return $sharedStrings[(int) $value] ?? '';
+        }
+
+        return $value;
+    }
+
+    private function xlsxColumnIndex(string $reference): ?int
+    {
+        if (! preg_match('/^([A-Z]+)/i', $reference, $matches)) {
+            return null;
+        }
+
+        $index = 0;
+        foreach (str_split(strtoupper($matches[1])) as $letter) {
+            $index = ($index * 26) + (ord($letter) - 64);
+        }
+
+        return $index - 1;
     }
 
     private function resolveOwner(string $value, User $user): User
@@ -220,11 +406,14 @@ class ImportExportController extends Controller
         return $customer;
     }
 
-    private function assertNoDuplicate(Builder $query, string $email, string $phone, int $row): void
+    private function assertNoDuplicate(Builder $query, string $email, string $phone, int $row, ?string $customerId = null): void
     {
         $emailExists = $email !== '' && (clone $query)->whereRaw('lower(email) = ?', [$email])->exists();
         $phoneExists = $phone !== '' && (clone $query)->get()->contains(fn ($record) => $this->phone($record->phone) === $this->phone($phone));
-        if ($emailExists || $phoneExists) throw new \RuntimeException('A record with this email or phone already exists.');
+        $customerIdExists = $customerId !== null
+            && $customerId !== ''
+            && (clone $query)->get()->contains(fn ($record) => $this->customerIdFromNotes($record->notes) === $customerId);
+        if ($emailExists || $phoneExists || $customerIdExists) throw new \RuntimeException('A record with this email, phone, or customer ID already exists.');
     }
 
     private function masterValue(string $type, string $value): ?CrmMasterValue
@@ -346,7 +535,40 @@ class ImportExportController extends Controller
     }
 
     private function value(array $data, array $keys): string { foreach ($keys as $key) { $key = $this->normalizeHeader($key); if (($data[$key] ?? '') !== '') return trim((string) $data[$key]); } return ''; }
-    private function normalizeHeader($value): string { return strtolower(preg_replace('/[^a-z0-9]+/', '_', trim((string) $value))); }
+    private function normalizeHeader($value): string { return preg_replace('/[^a-z0-9]+/', '_', strtolower(trim((string) $value))); }
     private function phone(?string $value): string { return preg_replace('/\D+/', '', (string) $value); }
+    private function customerIdFromNotes(?string $notes): ?string { return preg_match('/(?:^|\R)Customer ID:\s*(.+?)(?:\R|$)/', (string) $notes, $matches) ? trim($matches[1]) : null; }
     private function ownerOptions(User $user): Collection { $ids = $user->hasPermission('leads.assign') || $user->hasRole('admin') || $user->hasRole('super-admin') ? User::where('is_active', true)->pluck('id')->all() : array_merge([$user->id], $user->reportingTreeUserIds()); return User::whereIn('id', array_unique($ids))->where('is_active', true)->get(); }
+
+    private function customerNotes(array $data): ?string
+    {
+        $baseNotes = $this->value($data, ['notes']);
+        $fields = [
+            'Customer ID' => ['customer_id'],
+            'Sale Date' => ['date'],
+            'Amount' => ['amount'],
+            'Plan' => ['plan'],
+            'Software' => ['software'],
+            'License Number' => ['liscense_number', 'license_number'],
+            'Product Number' => ['product_number'],
+            'Cloud Customer' => ['cloud_customer'],
+            'Issue' => ['issue'],
+            'Sale Type' => ['sale_type'],
+            'No of Cases' => ['no_of_cases'],
+            'Payment Type' => ['payment_type'],
+            'Payment Last 4' => ['last_4'],
+        ];
+
+        $lines = [];
+        foreach ($fields as $label => $keys) {
+            $value = $this->value($data, $keys);
+            if ($value !== '') {
+                $lines[] = $label.': '.$value;
+            }
+        }
+
+        $notes = trim(implode("\n", array_filter([$baseNotes, implode("\n", $lines)])));
+
+        return $notes === '' ? null : $notes;
+    }
 }

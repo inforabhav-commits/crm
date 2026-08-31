@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\WebhookInboxEntry;
+use App\Services\Integrations\JustCall\JustCallWebhookInboxProcessor;
 use App\Services\Integrations\JustCall\JustCallWebhookVerifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
 
 class JustCallWebhookController extends Controller
 {
-    public function __invoke(Request $request, JustCallWebhookVerifier $verifier)
+    public function __invoke(Request $request, JustCallWebhookVerifier $verifier, JustCallWebhookInboxProcessor $processor)
     {
         $raw = $request->getContent();
         if (strlen($raw) > (int) config('justcall.max_webhook_payload_bytes', 262144)) {
@@ -57,6 +58,10 @@ class JustCallWebhookController extends Controller
             'processing_status' => 'pending',
             'attempt_count' => 0,
         ]);
+
+        if ($entry->wasRecentlyCreated) {
+            $processor->process($entry);
+        }
 
         return response()->json([
             'received' => true,

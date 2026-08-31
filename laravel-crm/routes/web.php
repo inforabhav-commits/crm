@@ -41,7 +41,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.store');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'cache.headers:no_store;no_cache;must_revalidate;max_age=0'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/reports', ReportsController::class)->name('reports.index');

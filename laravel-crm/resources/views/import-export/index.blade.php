@@ -13,15 +13,15 @@
     @if ($canImportLeads || $canImportCustomers)
         <section class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <h2 class="h5">Import CSV</h2>
-                <p class="text-muted small">CSV only, maximum 10 MB. Existing records with the same email or phone are rejected to prevent avoidable duplicates.</p>
+                <h2 class="h5">Import CSV or XLSX</h2>
+                <p class="text-muted small">CSV or XLSX, maximum 10 MB. Existing records with the same email or phone are rejected to prevent avoidable duplicates.</p>
                 <form method="post" action="{{ route('import-export.import') }}" enctype="multipart/form-data" class="row g-3">
                     @csrf
                     <div class="col-md-3"><label class="form-label" for="resource">Data type</label><select class="form-select" id="resource" name="resource" required>@if ($canImportLeads)<option value="leads">Leads</option>@endif @if ($canImportCustomers)<option value="customers">Customers</option><option value="contacts">Contacts</option>@endif</select></div>
-                    <div class="col-md-6"><label class="form-label" for="file">CSV file</label><input class="form-control" id="file" type="file" name="file" accept=".csv,text/csv" required></div>
-                    <div class="col-md-3 d-flex align-items-end"><button class="btn btn-primary" type="submit">Import CSV</button></div>
+                    <div class="col-md-6"><label class="form-label" for="file">Import file</label><input class="form-control" id="file" type="file" name="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></div>
+                    <div class="col-md-3 d-flex align-items-end"><button class="btn btn-primary" type="submit">Import</button></div>
                 </form>
-                <div class="small text-muted mt-3">Lead columns: name, email, phone, status, source, owner, priority. Customer columns: name, email, phone, owner. Contact columns: first_name, last_name, email, phone, customer_id or customer_email.</div>
+                <div class="small text-muted mt-3">Lead columns: name, email, phone, status, source, owner, priority. Customer columns: name, email, business_name, phone_no, billing_address, customer_id, date, amount, plan, software, license_number, product_number, cloud_customer, issue, sale_type, no_of_cases, payment_type, last_4, owner. Headerless OB customer files are also accepted with owner as the final column. Contact columns: first_name, last_name, email, phone, customer_id or customer_email.</div>
             </div>
         </section>
     @endif
