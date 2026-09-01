@@ -63,6 +63,10 @@ class ImportExportTest extends TestCase
         foreach ($rows as $rowIndex => $row) {
             $xml .= '<row r="'.($rowIndex + 1).'">';
             foreach ($row as $columnIndex => $value) {
+                if ($value === null) {
+                    continue;
+                }
+
                 $cell = $this->columnName($columnIndex).($rowIndex + 1);
                 $xml .= '<c r="'.$cell.'" t="inlineStr"><is><t>'.htmlspecialchars((string) $value, ENT_XML1).'</t></is></c>';
             }
@@ -136,6 +140,15 @@ class ImportExportTest extends TestCase
         $this->assertSame('CSV Business', $customer->company);
         $this->assertSame('1555010101', $customer->phone);
         $this->assertSame('123 Billing St', $customer->address);
+        $this->assertSame('C-100', $customer->external_customer_id);
+        $this->assertSame('99.95', $customer->amount);
+        $this->assertSame('Quickbooks Pro', $customer->software);
+        $this->assertSame('LIC-1', $customer->license_number);
+        $this->assertSame('PROD-1', $customer->product_number);
+        $this->assertSame('file-secret', $customer->file_password);
+        $this->assertSame('portal-user', $customer->customer_user_id);
+        $this->assertSame('portal-secret', $customer->customer_password);
+        $this->assertSame('Login issue', $customer->issue);
         $this->assertStringContainsString('Customer ID: C-100', $customer->notes);
         $this->assertStringContainsString('Payment Last 4: 4242', $customer->notes);
         $this->assertStringNotContainsString('4111111111111111', $customer->notes);
@@ -164,6 +177,31 @@ class ImportExportTest extends TestCase
         $this->assertStringContainsString('Payment Last 4: 2805', $customer->notes);
     }
 
+    public function test_customer_xlsx_import_preserves_sparse_cell_positions(): void
+    {
+        $agent = $this->user('agent', ['import.customers']);
+
+        $this->actingAs($agent)->post('/import-export', [
+            'resource' => 'customers',
+            'file' => $this->xlsx([
+                ['Customer ID', 'Name', 'Email', 'Business Name', 'Phone No', 'Billing Address', 'Date', 'Amount', 'Plan', 'Software', 'Liscense Number', 'Product Number', 'File Password', 'Cloud Customer', 'User ID', 'Password', 'Issue', 'Sale Type', 'No of Cases', 'Payment Type', 'Last 4', 'Card Type', 'End'],
+                ['10401216568', 'Mr. David Guenther', 'david@example.com', 'H Fish Co Ltd', '2043625591', 'P o Box 180', '4-Jan-21', '1560.8', '1 year', 'QuickBooks', 'LIC-2', 'PROD-2', null, '690215', 'Fsmiling190', null, 'unable to login', null, '1', 'Master Card', '2805'],
+            ]),
+        ])->assertRedirect('/import-export')->assertSessionHas('import_summary.imported', 1);
+
+        $customer = Customer::where('external_customer_id', '10401216568')->firstOrFail();
+        $this->assertSame('Mr. David Guenther', $customer->name);
+        $this->assertSame('H Fish Co Ltd', $customer->company);
+        $this->assertSame('2043625591', $customer->phone);
+        $this->assertSame('1 year', $customer->plan);
+        $this->assertSame('QuickBooks', $customer->software);
+        $this->assertSame('690215', $customer->cloud_customer);
+        $this->assertSame('Fsmiling190', $customer->customer_user_id);
+        $this->assertSame('unable to login', $customer->issue);
+        $this->assertSame('Master Card', $customer->payment_type);
+        $this->assertSame('2805', $customer->last_4);
+    }
+
     public function test_customer_xlsx_import_supports_headerless_ob_export_layout(): void
     {
         $agent = $this->user('agent', ['import.customers']);
@@ -172,19 +210,28 @@ class ImportExportTest extends TestCase
             'resource' => 'customers',
             'file' => $this->xlsx([
                 ['', '', '', '', '', '', '', '', '', '', '', '', '', 'Software'],
-                ['10401214863', '', '', '', '2043625591', '', '', '', '', '', '44200', '1560.83', '', '', '838088023961111', '690215', '', '', '', '', 'unable to login', '', '1'],
-                ['10501215378', 'Miss. Patricia Van Diepen', '', '', '5197199458', '', '', '', '', '', '44201', '495', '', '', '', '', '', '', '', '', '', '', '1'],
+                ['10401214863', '', '', '', '2043625591', '', '', '', '44200', '1560.83', '1 year', 'QuickBooks', '838088023961111', '690215', '', '', 'unable to login', '', '', '', '1', 'Master Card', '2805'],
+                ['10501215378', 'Miss. Patricia Van Diepen', '', '', '5197199458', '', '', '', '44201', '495', '1 year', 'Desktop', '', '', '', '', '', '', '', '', '1'],
             ]),
         ])->assertRedirect('/import-export')->assertSessionHas('import_summary.imported', 2);
 
         $fallback = Customer::where('phone', '2043625591')->firstOrFail();
         $this->assertSame('Customer 10401214863', $fallback->name);
-        $this->assertStringContainsString('Customer ID: 10401214863', $fallback->notes);
-        $this->assertStringContainsString('Issue: unable to login', $fallback->notes);
+        $this->assertSame('10401214863', $fallback->external_customer_id);
+        $this->assertSame('44200', $fallback->sale_date);
+        $this->assertSame('1560.83', $fallback->amount);
+        $this->assertSame('1 year', $fallback->plan);
+        $this->assertSame('QuickBooks', $fallback->software);
+        $this->assertSame('838088023961111', $fallback->product_number);
+        $this->assertSame('690215', $fallback->cloud_customer);
+        $this->assertSame('unable to login', $fallback->issue);
+        $this->assertSame('1', $fallback->no_of_cases);
+        $this->assertSame('Master Card', $fallback->payment_type);
+        $this->assertSame('2805', $fallback->last_4);
 
         $named = Customer::where('phone', '5197199458')->firstOrFail();
         $this->assertSame('Miss. Patricia Van Diepen', $named->name);
-        $this->assertStringContainsString('Amount: 495', $named->notes);
+        $this->assertSame('495', $named->amount);
     }
 
     public function test_headerless_ob_customer_import_supports_owner_final_column(): void
@@ -196,7 +243,7 @@ class ImportExportTest extends TestCase
             'resource' => 'customers',
             'file' => $this->xlsx([
                 ['', '', '', '', '', '', '', '', '', '', '', '', '', 'Software'],
-                ['20501214863', 'Owned Customer', '', '', '2043625592', '', '', '', '', '', '44200', '1560.83', '', '', '', '', '', '', '', '', 'support issue', '', '1', '', '', $owner->email],
+                ['20501214863', 'Owned Customer', '', '', '2043625592', '', '', '', '44200', '1560.83', '', '', '', '', '', '', 'support issue', '', '', '', '1', '', '', '', '', $owner->email],
             ]),
         ])->assertRedirect('/import-export')->assertSessionHas('import_summary.imported', 1);
 
@@ -212,8 +259,8 @@ class ImportExportTest extends TestCase
             'resource' => 'customers',
             'file' => $this->xlsx([
                 ['', '', '', '', '', '', '', '', '', '', '', '', '', 'Software'],
-                ['30601214863', 'First OB Customer', '', '', '', '', '', '', '', '', '44200', '1560.83', '', '', '', '', '', '', '', '', 'first issue', '', '1'],
-                ['30601214863', 'Duplicate OB Customer', '', '', '', '', '', '', '', '', '44201', '495', '', '', '', '', '', '', '', '', 'second issue', '', '1'],
+                ['30601214863', 'First OB Customer', '', '', '', '', '', '', '44200', '1560.83', '', '', '', '', '', '', 'first issue', '', '', '', '1'],
+                ['30601214863', 'Duplicate OB Customer', '', '', '', '', '', '', '44201', '495', '', '', '', '', '', '', 'second issue', '', '', '', '1'],
             ]),
         ])->assertRedirect('/import-export')
             ->assertSessionHas('import_summary.imported', 1)

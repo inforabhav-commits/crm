@@ -17,6 +17,7 @@
 html { background: var(--crm-bg); }
 body { background: var(--crm-bg); color: var(--crm-text); font-size: .925rem; line-height: 1.5; }
 [data-lucide] { width: 1rem; height: 1rem; stroke-width: 2; }
+.pagination svg { width: 1rem; height: 1rem; }
 .crm-shell { min-height: 100vh; }
 .crm-sidebar { width: 242px; flex: 0 0 242px; background: linear-gradient(180deg, var(--crm-navy), #0f1d35); color: #d9e3f2; }
 .crm-brand { margin-bottom: 1.35rem; min-height: 42px; }
