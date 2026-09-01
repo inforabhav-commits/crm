@@ -80,6 +80,7 @@ Route::middleware(['auth', 'cache.headers:no_store;no_cache;must_revalidate;max_
     Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
     Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
     Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
     Route::post('/customers/{customer}/justcall/call', [JustCallClickToCallController::class, 'customer'])->name('customers.justcall.call');
     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
     Route::get('/contacts/create', [ContactController::class, 'create'])->name('contacts.create');

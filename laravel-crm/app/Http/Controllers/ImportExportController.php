@@ -129,7 +129,11 @@ class ImportExportController extends Controller
 
         return $this->importRows($rows, function (array $data, int $row) use ($user) {
             $name = $this->value($data, ['name', 'customer_name']);
+            $businessName = $this->value($data, ['company', 'business_name']);
             $customerId = $this->value($data, ['customer_id']);
+            if ($name === '' && $businessName !== '') {
+                $name = $businessName;
+            }
             if ($name === '' && $customerId !== '') {
                 $name = 'Customer '.$customerId;
             }
@@ -139,13 +143,31 @@ class ImportExportController extends Controller
             $this->assertNoDuplicate(Customer::query(), $email, $phone, $row, $customerId);
             $owner = $this->resolveOwner($this->value($data, ['owner', 'owner_email', 'owner_id']), $user);
             Customer::create([
+                'external_customer_id' => $customerId ?: null,
                 'name' => $name,
-                'company' => $this->value($data, ['company', 'business_name']) ?: null,
+                'company' => $businessName ?: null,
                 'email' => $email ?: null,
                 'phone' => $phone ?: null,
                 'website' => $this->value($data, ['website']) ?: null,
                 'industry' => $this->value($data, ['industry']) ?: null,
                 'address' => $this->value($data, ['address', 'billing_address']) ?: null,
+                'sale_date' => $this->value($data, ['date', 'sale_date']) ?: null,
+                'amount' => $this->value($data, ['amount']) ?: null,
+                'plan' => $this->value($data, ['plan']) ?: null,
+                'software' => $this->value($data, ['software']) ?: null,
+                'license_number' => $this->value($data, ['liscense_number', 'license_number']) ?: null,
+                'product_number' => $this->value($data, ['product_number']) ?: null,
+                'file_password' => $this->value($data, ['file_password']) ?: null,
+                'cloud_customer' => $this->value($data, ['cloud_customer']) ?: null,
+                'customer_user_id' => $this->value($data, ['user_id', 'customer_user_id']) ?: null,
+                'customer_password' => $this->value($data, ['password', 'customer_password']) ?: null,
+                'issue' => $this->value($data, ['issue']) ?: null,
+                'sale_type' => $this->value($data, ['sale_type']) ?: null,
+                'no_of_cases' => $this->value($data, ['no_of_cases']) ?: null,
+                'payment_type' => $this->value($data, ['payment_type']) ?: null,
+                'last_4' => $this->value($data, ['last_4']) ?: null,
+                'card_type' => $this->value($data, ['card_type', 'cardtype']) ?: null,
+                'end' => $this->value($data, ['end', 'end_date']) ?: null,
                 'notes' => $this->customerNotes($data),
                 'owner_id' => $owner->id,
                 'is_active' => true,
@@ -233,7 +255,7 @@ class ImportExportController extends Controller
         $customerId = trim((string) ($row[0] ?? ''));
         $name = trim((string) ($row[1] ?? ''));
         $phone = $this->phone((string) ($row[4] ?? ''));
-        $amount = trim((string) ($row[11] ?? ''));
+        $amount = trim((string) ($row[9] ?? $row[7] ?? $row[11] ?? ''));
 
         return $customerId !== ''
             && (is_numeric($customerId) || $name !== '' || $phone !== '')
@@ -251,23 +273,23 @@ class ImportExportController extends Controller
             'Billing Address',
             'Reserved 1',
             'Reserved 2',
-            'Reserved 3',
-            'Reserved 4',
             'Date',
             'Amount',
             'Plan',
             'Software',
             'Product Number',
-            'License Number',
             'Cloud Customer',
-            'Reserved 5',
-            'Reserved 6',
-            'Reserved 7',
+            'Reserved 3',
+            'Reserved 4',
             'Issue',
             'Sale Type',
+            'Reserved 5',
+            'Reserved 6',
             'No of Cases',
             'Payment Type',
             'Last 4',
+            'Card Type',
+            'End',
             'Owner',
         ];
     }
@@ -314,7 +336,11 @@ class ImportExportController extends Controller
 
                 if ($values !== []) {
                     ksort($values);
-                    $rows[] = array_map(fn ($value) => (string) $value, $values + array_fill(0, max(array_keys($values)) + 1, ''));
+                    $rowValues = [];
+                    for ($column = 0, $lastColumn = max(array_keys($values)); $column <= $lastColumn; $column++) {
+                        $rowValues[] = (string) ($values[$column] ?? '');
+                    }
+                    $rows[] = $rowValues;
                 }
             }
 
@@ -412,7 +438,7 @@ class ImportExportController extends Controller
         $phoneExists = $phone !== '' && (clone $query)->get()->contains(fn ($record) => $this->phone($record->phone) === $this->phone($phone));
         $customerIdExists = $customerId !== null
             && $customerId !== ''
-            && (clone $query)->get()->contains(fn ($record) => $this->customerIdFromNotes($record->notes) === $customerId);
+            && (clone $query)->get()->contains(fn ($record) => (string) $record->external_customer_id === $customerId || $this->customerIdFromNotes($record->notes) === $customerId);
         if ($emailExists || $phoneExists || $customerIdExists) throw new \RuntimeException('A record with this email, phone, or customer ID already exists.');
     }
 
@@ -505,7 +531,7 @@ class ImportExportController extends Controller
     {
         return match ($resource) {
             'leads' => ['Name', 'Company', 'Email', 'Phone', 'Status', 'Source', 'Owner', 'Priority', 'Created At'],
-            'customers' => ['Name', 'Company', 'Email', 'Phone', 'Website', 'Industry', 'Address', 'Owner', 'Active', 'Created At'],
+            'customers' => ['Customer ID', 'Name', 'Email', 'Business Name', 'Phone No', 'Billing Address', 'Date', 'Amount', 'Plan', 'Software', 'Liscense Number', 'Product Number', 'File Password', 'Cloud Customer', 'User ID', 'Password', 'Issue', 'Sale Type', 'No of Cases', 'Payment Type', 'Last 4', 'Card Type', 'End', 'Owner', 'Active', 'Created At'],
             'contacts' => ['First Name', 'Last Name', 'Title', 'Email', 'Phone', 'Mobile', 'Customer', 'Active', 'Created At'],
             'opportunities' => ['Name', 'Customer', 'Stage', 'Owner', 'Amount', 'Currency', 'Probability', 'Status', 'Expected Close Date', 'Closed At', 'Created At'],
             'activities' => ['Subject', 'Type', 'Status', 'Priority', 'Due At', 'Assigned User', 'Related Type', 'Related ID', 'Created At'],
@@ -520,7 +546,7 @@ class ImportExportController extends Controller
 
         return match ($resource) {
             'leads' => [$record->name, $record->company, $record->email, $phonePrivacy->exportValue($record->phone, $user), $record->status?->name, $record->source?->name, $record->owner?->name, $record->priority, $record->created_at],
-            'customers' => [$record->name, $record->company, $record->email, $phonePrivacy->exportValue($record->phone, $user), $record->website, $record->industry, $record->address, $record->owner?->name, $record->is_active ? 'yes' : 'no', $record->created_at],
+            'customers' => [$record->external_customer_id, $record->name, $record->email, $record->company, $phonePrivacy->exportValue($record->phone, $user), $record->address, $record->sale_date, $record->amount, $record->plan, $record->software, $record->license_number, $record->product_number, $record->file_password, $record->cloud_customer, $record->customer_user_id, $record->customer_password, $record->issue, $record->sale_type, $record->no_of_cases, $record->payment_type, $record->last_4, $record->card_type, $record->end, $record->owner?->name, $record->is_active ? 'yes' : 'no', $record->created_at],
             'contacts' => [$record->first_name, $record->last_name, $record->title, $record->email, $phonePrivacy->exportValue($record->phone, $user), $phonePrivacy->exportValue($record->mobile, $user), $record->customer?->name, $record->is_active ? 'yes' : 'no', $record->created_at],
             'opportunities' => [$record->name, $record->customer?->name, $record->stage?->name, $record->owner?->name, $record->amount, $record->currency, $record->probability, $record->status, $record->expected_close_date, $record->closed_at, $record->created_at],
             'activities' => [$record->subject, $record->type?->name, $record->status, $record->priority, $record->due_at, $record->assignedUser?->name, $record->related_type, $record->related_id, $record->created_at],
@@ -557,6 +583,8 @@ class ImportExportController extends Controller
             'No of Cases' => ['no_of_cases'],
             'Payment Type' => ['payment_type'],
             'Payment Last 4' => ['last_4'],
+            'Card Type' => ['card_type', 'cardtype'],
+            'End' => ['end', 'end_date'],
         ];
 
         $lines = [];

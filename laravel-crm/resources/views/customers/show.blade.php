@@ -42,6 +42,13 @@
                     @can('customers.edit')
                         <a class="btn btn-primary" href="{{ route('customers.edit', $customer) }}">Edit</a>
                     @endcan
+                    @can('customers.delete')
+                        <form method="post" action="{{ route('customers.destroy', $customer) }}" onsubmit="return confirm('Delete this customer? This action cannot be undone.');">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-outline-danger" type="submit">Delete</button>
+                        </form>
+                    @endcan
                 </div>
             </div>
 
@@ -55,10 +62,27 @@
 
             <div class="row g-3" id="overview">
                 <div class="col-md-3"><div class="text-muted small">Owner</div><div>{{ $customer->owner?->name ?? 'Unassigned' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Customer ID</div><div>{{ $customer->external_customer_id ?: '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Primary Contact</div><div>{{ $primaryContact?->name ?? '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Status</div><div><span class="badge crm-status-badge {{ $customer->is_active ? 'crm-status-success' : 'crm-status-secondary' }}">{{ $customer->is_active ? 'Active' : 'Inactive' }}</span></div></div>
                 <div class="col-md-3"><div class="text-muted small">Email</div><div>{{ $customer->email ?: '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Phone</div><div>{{ $phonePrivacy->display($customer->phone, auth()->user()) }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Date</div><div>{{ $customer->sale_date ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Amount</div><div>{{ $customer->amount ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Plan</div><div>{{ $customer->plan ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Software</div><div>{{ $customer->software ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Liscense Number</div><div>{{ $customer->license_number ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Product Number</div><div>{{ $customer->product_number ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">File Password</div><div>{{ $customer->file_password ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Cloud Customer</div><div>{{ $customer->cloud_customer ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">User ID</div><div>{{ $customer->customer_user_id ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Password</div><div>{{ $customer->customer_password ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Sale Type</div><div>{{ $customer->sale_type ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">No of Cases</div><div>{{ $customer->no_of_cases ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Payment Type</div><div>{{ $customer->payment_type ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Last 4</div><div>{{ $customer->last_4 ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">Card Type</div><div>{{ $customer->card_type ?: '-' }}</div></div>
+                <div class="col-md-3"><div class="text-muted small">End</div><div>{{ $customer->end ?: '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Industry</div><div>{{ $customer->industry ?: '-' }}</div></div>
                 <div class="col-md-3"><div class="text-muted small">Website</div><div>{{ $customer->website ?: '-' }}</div></div>
                 <div class="col-md-3">
@@ -73,7 +97,8 @@
                 </div>
                 <div class="col-md-3"><div class="text-muted small">Contacts</div><div>{{ $summary['contacts'] }} total / {{ $summary['active_contacts'] }} active</div></div>
                 <div class="col-md-3"><div class="text-muted small">Activities</div><div>{{ $summary['activities'] }} total / {{ $summary['pending_activities'] }} pending</div></div>
-                <div class="col-md-6"><div class="text-muted small">Address</div><div class="crm-note-box">{{ $customer->address ?: 'No address recorded.' }}</div></div>
+                <div class="col-md-6"><div class="text-muted small">Billing Address</div><div class="crm-note-box">{{ $customer->address ?: 'No billing address recorded.' }}</div></div>
+                <div class="col-md-6"><div class="text-muted small">Issue</div><div class="crm-note-box">{{ $customer->issue ?: 'No issue recorded.' }}</div></div>
                 <div class="col-md-6" id="notes"><div class="text-muted small">Notes</div><div class="crm-note-box">{{ $customer->notes ?: 'No notes recorded.' }}</div></div>
             </div>
         </div>

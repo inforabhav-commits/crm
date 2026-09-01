@@ -101,6 +101,45 @@ class AuthFlowTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_expired_login_csrf_redirects_to_login_without_419()
+    {
+        $request = Request::create('/login', 'POST');
+        $request->setLaravelSession(app('session.store'));
+        $route = app('router')->getRoutes()->match($request);
+        $request->setRouteResolver(fn () => $route);
+
+        $response = app(\App\Exceptions\Handler::class)->render($request, new TokenMismatchException());
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertStringEndsWith('/login', $response->headers->get('Location'));
+        $this->assertGuest();
+    }
+
+    public function test_expired_authenticated_form_csrf_redirects_back_without_419()
+    {
+        $role = Role::create(['name' => 'Agent', 'slug' => 'agent']);
+        $user = User::create([
+            'name' => 'Expired Form User',
+            'email' => 'expired-form@example.com',
+            'password' => Hash::make('password'),
+            'is_active' => true,
+        ]);
+        $user->roles()->attach($role);
+
+        $this->actingAs($user);
+        $request = Request::create('/import-export', 'POST');
+        $request->headers->set('referer', 'http://localhost/import-export');
+        $request->setLaravelSession(app('session.store'));
+        $route = app('router')->getRoutes()->match($request);
+        $request->setRouteResolver(fn () => $route);
+
+        $response = app(\App\Exceptions\Handler::class)->render($request, new TokenMismatchException());
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertNotEmpty($response->headers->get('Location'));
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_authenticated_pages_are_not_browser_cached()
     {
         $role = Role::create(['name' => 'Agent', 'slug' => 'agent']);

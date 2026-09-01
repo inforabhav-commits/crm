@@ -59,10 +59,11 @@
                 <table class="table align-middle">
                     <thead>
                     <tr>
-                        <th>Customer</th>
-                        <th>Contact</th>
-                        <th>Industry</th>
-                        <th>Owner</th>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Business Name</th>
+                        <th>Phone No</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -70,24 +71,29 @@
                     <tbody>
                     @forelse ($customers as $customer)
                         <tr>
-                            <td>
-                                <div class="fw-semibold">{{ $customer->name }}</div>
-                                <small class="text-muted">{{ $customer->company ?: 'No company' }}</small>
-                            </td>
-                            <td>{{ $customer->email ?: ($customer->phone ? $phonePrivacy->display($customer->phone, auth()->user()) : '-') }}</td>
-                            <td>{{ $customer->industry ?: '-' }}</td>
-                            <td>{{ $customer->owner?->name ?? 'Unassigned' }}</td>
+                            <td>{{ $customer->external_customer_id ?: '-' }}</td>
+                            <td class="fw-semibold">{{ $customer->name }}</td>
+                            <td>{{ $customer->email ?: '-' }}</td>
+                            <td>{{ $customer->company ?: '-' }}</td>
+                            <td>{{ $customer->phone ? $phonePrivacy->display($customer->phone, auth()->user()) : '-' }}</td>
                             <td><span class="badge crm-status-badge {{ $customer->is_active ? 'crm-status-success' : 'crm-status-secondary' }}">{{ $customer->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ route('customers.show', $customer) }}">View</a>
                                 @can('customers.edit')
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('customers.edit', $customer) }}">Edit</a>
                                 @endcan
+                                @can('customers.delete')
+                                    <form class="d-inline" method="post" action="{{ route('customers.destroy', $customer) }}" onsubmit="return confirm('Delete this customer? This action cannot be undone.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    </form>
+                                @endcan
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 @include('partials.empty-state', [
                                     'icon' => 'contact',
                                     'title' => 'No customers found',

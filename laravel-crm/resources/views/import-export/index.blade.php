@@ -21,7 +21,7 @@
                     <div class="col-md-6"><label class="form-label" for="file">Import file</label><input class="form-control" id="file" type="file" name="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></div>
                     <div class="col-md-3 d-flex align-items-end"><button class="btn btn-primary" type="submit">Import</button></div>
                 </form>
-                <div class="small text-muted mt-3">Lead columns: name, email, phone, status, source, owner, priority. Customer columns: name, email, business_name, phone_no, billing_address, customer_id, date, amount, plan, software, license_number, product_number, cloud_customer, issue, sale_type, no_of_cases, payment_type, last_4, owner. Headerless OB customer files are also accepted with owner as the final column. Contact columns: first_name, last_name, email, phone, customer_id or customer_email.</div>
+                <div class="small text-muted mt-3">Lead columns: name, email, phone, status, source, owner, priority. Customer columns: customer_id, name, email, business_name, phone_no, billing_address, date, amount, plan, software, license_number, product_number, file_password, cloud_customer, user_id, password, issue, sale_type, no_of_cases, payment_type, last_4, card_type, end, owner. Headerless OB customer files are also accepted with owner as the final column. Contact columns: first_name, last_name, email, phone, customer_id or customer_email.</div>
             </div>
         </section>
     @endif

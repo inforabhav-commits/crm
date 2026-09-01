@@ -56,6 +56,7 @@ class DatabaseSeeder extends Seeder
             'customers.view_full_phone' => 'View full customer phone numbers',
             'customers.create' => 'Create customers',
             'customers.edit' => 'Edit customers',
+            'customers.delete' => 'Delete customers',
             'contacts.view' => 'View contacts',
             'contacts.create' => 'Create contacts',
             'contacts.edit' => 'Edit contacts',

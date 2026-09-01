@@ -52,12 +52,26 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $e)
     {
-        if ($e instanceof TokenMismatchException && $request->isMethod('post') && $request->routeIs('logout')) {
-            Auth::logout();
-            $request->session()->invalidate();
+        if ($e instanceof TokenMismatchException && ! $request->expectsJson()) {
+            if ($request->isMethod('post') && $request->routeIs('logout')) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login');
+            }
+
+            if (! Auth::check() || $request->routeIs('login.store')) {
+                return redirect()
+                    ->route('login')
+                    ->withErrors(['email' => 'Your session expired. Please sign in again.']);
+            }
+
             $request->session()->regenerateToken();
 
-            return redirect()->route('login');
+            return redirect()
+                ->back()
+                ->withErrors(['session' => 'Your session expired. Please try again.']);
         }
 
         return parent::render($request, $e);

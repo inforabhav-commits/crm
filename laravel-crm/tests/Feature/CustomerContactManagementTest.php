@@ -115,6 +115,23 @@ class CustomerContactManagementTest extends TestCase
                 'phone' => '5553003000',
                 'website' => 'https://northwind.test',
                 'industry' => 'Software',
+                'external_customer_id' => 'CUST-100',
+                'amount' => '299.95',
+                'plan' => 'Annual',
+                'software' => 'Desktop Suite',
+                'license_number' => 'LIC-100',
+                'product_number' => 'PROD-100',
+                'file_password' => 'file-secret',
+                'cloud_customer' => 'Yes',
+                'customer_user_id' => 'northwind-user',
+                'customer_password' => 'customer-secret',
+                'issue' => 'Install help',
+                'sale_type' => 'New',
+                'no_of_cases' => '3',
+                'payment_type' => 'Visa',
+                'last_4' => '4242',
+                'card_type' => 'Credit',
+                'end' => '2027-08-31',
                 'owner_id' => $owner->id,
                 'is_active' => '1',
                 'notes' => 'Important account.',
@@ -123,6 +140,9 @@ class CustomerContactManagementTest extends TestCase
 
         $customer = Customer::where('name', 'Northwind Account')->firstOrFail();
         $this->assertSame($owner->id, $customer->owner_id);
+        $this->assertSame('CUST-100', $customer->external_customer_id);
+        $this->assertSame('LIC-100', $customer->license_number);
+        $this->assertSame('customer-secret', $customer->customer_password);
 
         $this->actingAs($admin)
             ->put("/customers/{$customer->id}", [
@@ -131,6 +151,23 @@ class CustomerContactManagementTest extends TestCase
                 'email' => 'updated@northwind.test',
                 'phone' => '5553003001',
                 'industry' => 'Services',
+                'external_customer_id' => 'CUST-101',
+                'amount' => '399.95',
+                'plan' => 'Monthly',
+                'software' => 'Cloud Suite',
+                'license_number' => 'LIC-101',
+                'product_number' => 'PROD-101',
+                'file_password' => 'new-file-secret',
+                'cloud_customer' => 'No',
+                'customer_user_id' => 'updated-user',
+                'customer_password' => 'new-customer-secret',
+                'issue' => 'Renewal help',
+                'sale_type' => 'Renewal',
+                'no_of_cases' => '4',
+                'payment_type' => 'Master Card',
+                'last_4' => '2805',
+                'card_type' => 'Debit',
+                'end' => '2027-09-30',
                 'owner_id' => $owner->id,
                 'is_active' => '0',
             ])
@@ -138,6 +175,9 @@ class CustomerContactManagementTest extends TestCase
 
         $customer->refresh();
         $this->assertSame('Northwind Updated', $customer->name);
+        $this->assertSame('CUST-101', $customer->external_customer_id);
+        $this->assertSame('Cloud Suite', $customer->software);
+        $this->assertSame('new-customer-secret', $customer->customer_password);
         $this->assertFalse($customer->is_active);
     }
 
@@ -185,7 +225,26 @@ class CustomerContactManagementTest extends TestCase
     {
         $agent = $this->userWithRole('agent', ['customers.view', 'contacts.view']);
         $otherAgent = $this->userWithRole('agent', ['customers.view', 'contacts.view']);
-        $ownCustomer = $this->customerFor($agent, ['name' => 'Own Customer']);
+        $ownCustomer = $this->customerFor($agent, [
+            'name' => 'Own Customer',
+            'external_customer_id' => 'LIST-100',
+            'company' => 'List Business',
+            'sale_date' => '44200',
+            'amount' => '1560.83',
+            'plan' => '1 year',
+            'software' => 'QuickBooks',
+            'license_number' => 'LIC-LIST',
+            'product_number' => 'PROD-LIST',
+            'cloud_customer' => '690215',
+            'customer_user_id' => 'list-user',
+            'issue' => 'Unable to login',
+            'sale_type' => 'Renewal',
+            'no_of_cases' => '1',
+            'payment_type' => 'Master Card',
+            'last_4' => '2805',
+            'card_type' => 'Credit',
+            'end' => '2027-01-01',
+        ]);
         $otherCustomer = $this->customerFor($otherAgent, ['name' => 'Other Customer']);
         $this->contactFor($ownCustomer, ['first_name' => 'Own']);
         $this->contactFor($otherCustomer, ['first_name' => 'Other']);
@@ -193,7 +252,11 @@ class CustomerContactManagementTest extends TestCase
         $this->actingAs($agent)
             ->get('/customers')
             ->assertOk()
+            ->assertSee('Business Name')
+            ->assertSee('Phone No')
             ->assertSee('Own Customer')
+            ->assertSee('LIST-100')
+            ->assertSee('List Business')
             ->assertDontSee('Other Customer');
 
         $this->actingAs($agent)
@@ -296,5 +359,24 @@ class CustomerContactManagementTest extends TestCase
             'name' => 'Converted Co',
             'converted_from_lead_id' => $lead->id,
         ]);
+    }
+
+    public function test_customer_delete_requires_permission_and_removes_record()
+    {
+        $owner = $this->userWithRole('agent');
+        $customer = $this->customerFor($owner, ['name' => 'Delete Me']);
+
+        $this->actingAs($owner)
+            ->delete("/customers/{$customer->id}")
+            ->assertForbidden();
+
+        $admin = $this->userWithRole('super-admin');
+
+        $this->actingAs($admin)
+            ->delete("/customers/{$customer->id}")
+            ->assertRedirect('/customers');
+
+        $this->assertDatabaseMissing('customers', ['id' => $customer->id]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'customer.deleted']);
     }
 }

@@ -29,7 +29,11 @@ class CustomerController extends Controller
             $query->where(function ($subQuery) use ($search, $request) {
                 $subQuery->where('name', 'like', "%{$search}%")
                     ->orWhere('company', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('external_customer_id', 'like', "%{$search}%")
+                    ->orWhere('software', 'like', "%{$search}%")
+                    ->orWhere('license_number', 'like', "%{$search}%")
+                    ->orWhere('product_number', 'like', "%{$search}%");
 
                 if (app(PhonePrivacyService::class)->canViewFullPhone($request->user())) {
                     $subQuery->orWhere('phone', 'like', "%{$search}%");
@@ -89,7 +93,7 @@ class CustomerController extends Controller
 
         $validated = $this->validatedCustomer($request);
         if (! app(PhonePrivacyService::class)->canViewFullPhone($request->user()) && trim((string) ($validated['phone'] ?? '')) === '') {
-            $validated['phone'] = $customer->phone;
+            $validated['phone'] = null;
         }
         $this->abortIfCannotAssignTo($request->user(), (int) $validated['owner_id']);
         $this->abortIfCannotUseLead($request, $validated['converted_from_lead_id'] ?? null);
@@ -199,6 +203,17 @@ class CustomerController extends Controller
         return redirect()->route('customers.show', $customer)->with('status', 'Customer updated.');
     }
 
+    public function destroy(Request $request, Customer $customer, AuditService $audit)
+    {
+        $this->authorize('customers.delete');
+        $this->abortIfCannotAccessCustomer($request->user(), $customer);
+
+        $audit->log('customer.deleted', $customer, 'Customer deleted.', $customer->getAttributes(), null, $request->user(), $request);
+        $customer->delete();
+
+        return redirect()->route('customers.index')->with('status', 'Customer deleted.');
+    }
+
     private function formData(Customer $customer, User $user): array
     {
         return [
@@ -211,6 +226,7 @@ class CustomerController extends Controller
     private function validatedCustomer(Request $request): array
     {
         return $request->validate([
+            'external_customer_id' => ['nullable', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'company' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -218,6 +234,23 @@ class CustomerController extends Controller
             'website' => ['nullable', 'string', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:5000'],
+            'sale_date' => ['nullable', 'string', 'max:255'],
+            'amount' => ['nullable', 'string', 'max:255'],
+            'plan' => ['nullable', 'string', 'max:255'],
+            'software' => ['nullable', 'string', 'max:255'],
+            'license_number' => ['nullable', 'string', 'max:255'],
+            'product_number' => ['nullable', 'string', 'max:255'],
+            'file_password' => ['nullable', 'string', 'max:5000'],
+            'cloud_customer' => ['nullable', 'string', 'max:255'],
+            'customer_user_id' => ['nullable', 'string', 'max:255'],
+            'customer_password' => ['nullable', 'string', 'max:5000'],
+            'issue' => ['nullable', 'string', 'max:5000'],
+            'sale_type' => ['nullable', 'string', 'max:255'],
+            'no_of_cases' => ['nullable', 'string', 'max:255'],
+            'payment_type' => ['nullable', 'string', 'max:255'],
+            'last_4' => ['nullable', 'string', 'max:4'],
+            'card_type' => ['nullable', 'string', 'max:255'],
+            'end' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'owner_id' => ['required', 'integer', Rule::exists('users', 'id')->where('is_active', true)],
             'converted_from_lead_id' => ['nullable', 'integer', 'exists:leads,id'],
