@@ -136,6 +136,22 @@ class JustCallClickToCallTest extends TestCase
         $this->assertStringContainsString('numbers=%2B15550102000', $response->headers->get('Location'));
     }
 
+    public function test_authorized_json_request_returns_embedded_dialer_payload()
+    {
+        $agent = $this->userWithRole('agent', ['calls.initiate', 'leads.view']);
+        $this->map($agent);
+        $lead = $this->lead($agent);
+
+        $this->actingAs($agent)
+            ->postJson(route('leads.justcall.call', $lead))
+            ->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('number', '+15550102000')
+            ->assertJsonPath('display_phone', 'XXXXXXX2000')
+            ->assertJsonPath('record.type', 'Lead')
+            ->assertJsonPath('record.id', $lead->id);
+    }
+
     public function test_customer_click_to_call()
     {
         $agent = $this->userWithRole('agent', ['calls.initiate', 'customers.view']);
@@ -242,6 +258,7 @@ class JustCallClickToCallTest extends TestCase
             ->get(route('leads.show', $lead))
             ->assertOk()
             ->assertSee(route('leads.justcall.call', $lead), false)
+            ->assertDontSee('target="_blank"', false)
             ->assertDontSee('secret-api-key')
             ->assertDontSee('secret-api-secret')
             ->assertDontSee('secret-webhook-secret');

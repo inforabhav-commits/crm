@@ -118,6 +118,20 @@ body { background: var(--crm-bg); color: var(--crm-text); font-size: .925rem; li
 .call-dock[data-state="missed"] .call-dock-button { background: var(--crm-danger); }
 .call-dock[data-state="completed"] .call-dock-button { background: #475467; }
 .screen-pop { width: min(360px, calc(100vw - 2.5rem)); display: none; }
+.justcall-dialer-shell { position: fixed; right: 1.25rem; bottom: 5.5rem; z-index: 1081; }
+.justcall-dialer-panel { background: #fff; border: 1px solid var(--crm-border); border-radius: 8px; box-shadow: 0 14px 34px rgba(18,35,63,.22); overflow: hidden; width: min(380px, calc(100vw - 2.5rem)); }
+.justcall-dialer-panel[hidden] { display: none; }
+.justcall-dialer-header { align-items: center; background: var(--crm-navy); color: #fff; display: flex; justify-content: space-between; min-height: 52px; padding: .7rem .85rem; }
+.justcall-dialer-kicker { color: #b9c8dc; font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.justcall-dialer-title { font-size: .95rem; font-weight: 800; line-height: 1.2; }
+.justcall-dialer-close { align-items: center; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); border-radius: 8px; color: #fff; display: inline-flex; height: 32px; justify-content: center; width: 32px; }
+.justcall-dialer-close:hover { background: rgba(255,255,255,.18); }
+.justcall-dialer-status { border-bottom: 1px solid var(--crm-border); color: var(--crm-muted); font-size: .8rem; min-height: 38px; padding: .55rem .85rem; }
+.justcall-dialer-frame { height: min(620px, calc(100vh - 12rem)); min-height: 470px; width: 100%; }
+.justcall-dialer-frame iframe { border: 0; display: block; height: 100%; width: 100%; }
+.justcall-dialer-shell[data-state="error"] .justcall-dialer-status { color: var(--crm-danger); }
+.justcall-dialer-shell[data-state="login"] .justcall-dialer-status { color: var(--crm-warning); }
+.justcall-dialer-shell[data-state="connected"] .justcall-dialer-status { color: var(--crm-success); }
 @media (max-width: 991.98px) {
     .crm-shell { display: block !important; }
     .crm-sidebar { width: 100%; }
@@ -139,4 +153,7 @@ body { background: var(--crm-bg); color: var(--crm-text); font-size: .925rem; li
     .table thead th, .table tbody td { padding: .7rem; }
     .call-dock { right: 1rem; bottom: 1rem; }
     .call-dock-button { min-height: 44px; padding: 0 .85rem; }
+    .justcall-dialer-shell { bottom: 5.2rem; left: 1rem; right: 1rem; }
+    .justcall-dialer-panel { width: 100%; }
+    .justcall-dialer-frame { height: min(560px, calc(100vh - 11rem)); min-height: 420px; }
 }

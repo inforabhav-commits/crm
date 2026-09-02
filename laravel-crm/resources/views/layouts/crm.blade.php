@@ -112,6 +112,22 @@
 </div>
 
 @can('calls.initiate')
+<div class="justcall-dialer-shell" id="justcall-dialer-shell" data-state="idle" aria-live="polite">
+    <div class="justcall-dialer-panel" id="justcall-dialer-panel" hidden>
+        <div class="justcall-dialer-header">
+            <div>
+                <div class="justcall-dialer-kicker">JustCall Dialer</div>
+                <div class="justcall-dialer-title" id="justcall-dialer-title">Ready</div>
+            </div>
+            <button class="justcall-dialer-close" id="justcall-dialer-close" type="button" aria-label="Close JustCall dialer">
+                <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="justcall-dialer-status" id="justcall-dialer-status">Open the dialer before placing a call.</div>
+        <div class="justcall-dialer-frame" id="justcall-dialer"></div>
+    </div>
+</div>
+
 <div class="call-dock" id="call-dock" data-state="idle" aria-live="polite">
     <button class="call-dock-button" id="call-dock-button" type="button" aria-label="Call status">
         <i data-lucide="phone" aria-hidden="true"></i>
@@ -139,30 +155,11 @@
 @endcan
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+@vite(['resources/js/app.js'])
 <script>
     if (window.lucide) {
         window.lucide.createIcons();
     }
-
-    document.addEventListener('submit', function (event) {
-        if (! event.target.matches('[data-click-to-call-form]')) {
-            return;
-        }
-
-        const button = event.target.querySelector('[data-click-to-call-button]');
-        if (! button) {
-            return;
-        }
-
-        button.disabled = true;
-        button.dataset.originalText = button.textContent;
-        button.textContent = 'Launching...';
-
-        window.setTimeout(function () {
-            button.disabled = false;
-            button.textContent = button.dataset.originalText;
-        }, 2500);
-    });
 
     @can('calls.initiate')
     (function () {

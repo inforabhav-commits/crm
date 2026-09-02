@@ -39,7 +39,15 @@ class JustCallClickToCallController extends Controller
         $result = $clickToCall->launch($request->user(), $record, $request);
 
         if (! $result['ok']) {
+            if ($request->expectsJson()) {
+                return response()->json($result, 422);
+            }
+
             return back()->with('error', $result['message']);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json($result);
         }
 
         return redirect()->away($result['url']);

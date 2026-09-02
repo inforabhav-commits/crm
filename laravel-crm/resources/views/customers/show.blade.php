@@ -24,7 +24,7 @@
                     <a class="btn btn-outline-secondary" href="{{ route('customers.index') }}">Back</a>
                     @can('calls.initiate')
                         @if ($canShowCallAction)
-                            <form method="post" action="{{ route('customers.justcall.call', $customer) }}" data-click-to-call-form target="_blank" rel="noopener">
+                            <form method="post" action="{{ route('customers.justcall.call', $customer) }}" data-click-to-call-form>
                                 @csrf
                                 <button class="btn btn-outline-primary" type="submit" data-click-to-call-button><i data-lucide="phone" aria-hidden="true"></i><span>Call</span></button>
                             </form>

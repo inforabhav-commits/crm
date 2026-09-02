@@ -8,6 +8,7 @@ use App\Models\JustCallUserMapping;
 use App\Models\Lead;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\PhonePrivacyService;
 use App\Services\PhoneNumberNormalizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class JustCallClickToCallService
     public function __construct(
         private JustCallClient $client,
         private PhoneNumberNormalizer $phoneNormalizer,
+        private PhonePrivacyService $phonePrivacy,
         private AuditService $audit
     ) {
     }
@@ -67,6 +69,13 @@ class JustCallClickToCallService
         return [
             'ok' => true,
             'url' => $this->client->dialerUrl($normalized['normalized'], $metadata),
+            'number' => $normalized['normalized'],
+            'display_phone' => $this->phonePrivacy->display($phone, $user),
+            'record' => [
+                'type' => class_basename($record),
+                'id' => $record->getKey(),
+                'name' => $this->recordName($record),
+            ],
         ];
     }
 
@@ -97,6 +106,15 @@ class JustCallClickToCallService
         }
 
         return strlen($comparison) >= 7 && strlen($comparison) <= 15;
+    }
+
+    private function recordName(Model $record): string
+    {
+        if ($record instanceof Contact) {
+            return $record->name;
+        }
+
+        return (string) ($record->name ?? class_basename($record).' #'.$record->getKey());
     }
 
     private function maskedPhone(?string $comparison): ?string
