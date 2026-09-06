@@ -14,8 +14,10 @@ use App\Models\User;
 use App\Services\AuditService;
 use App\Services\PhonePrivacyService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
@@ -51,6 +53,18 @@ class ImportExportController extends Controller
         abort_if($file->getSize() > 10 * 1024 * 1024, 422, 'The import file is too large.');
 
         $rows = $this->readRows($file->getRealPath(), $extension);
+        if ($mismatch = $this->selectedResourceMismatchMessage($rows, $validated['resource'])) {
+            $summary = [
+                'resource' => $validated['resource'],
+                'imported' => 0,
+                'errors' => [
+                    ['row' => 1, 'message' => $mismatch],
+                ],
+            ];
+
+            return Redirect::route('import-export.index')->with('import_summary', $summary);
+        }
+
         $summary = match ($validated['resource']) {
             'leads' => $this->importLeads($rows, $request->user()),
             'customers' => $this->importCustomers($rows, $request->user()),
@@ -213,15 +227,70 @@ class ImportExportController extends Controller
             $rowNumber = $index + 2;
             if (! array_filter($row, fn ($value) => trim((string) $value) !== '')) continue;
             $data = [];
-            foreach ($headers as $column => $header) if ($header !== '') $data[$header] = trim((string) ($row[$column] ?? ''));
+            foreach ($headers as $column => $header) if ($header !== '') $data[$header] = $this->cleanImportedValue($row[$column] ?? '');
             try {
                 $callback($data, $rowNumber);
                 $summary['imported']++;
             } catch (\Throwable $exception) {
-                $summary['errors'][] = ['row' => $rowNumber, 'message' => $exception->getMessage()];
+                $message = $this->importErrorMessage($exception);
+                Log::warning('CRM import row rejected.', [
+                    'row' => $rowNumber,
+                    'exception' => $exception,
+                ]);
+                $summary['errors'][] = ['row' => $rowNumber, 'message' => $message];
             }
         }
         return $summary;
+    }
+
+    private function importErrorMessage(\Throwable $exception): string
+    {
+        if ($exception instanceof QueryException) {
+            $message = $exception->getMessage();
+
+            if (str_contains($message, 'Incorrect string value')) {
+                return 'This row contains unsupported special characters. The importer has cleaned common Excel characters; please retry the import.';
+            }
+
+            if (str_contains($message, 'Duplicate entry')) {
+                return 'A database duplicate rule rejected this row.';
+            }
+
+            return 'The database rejected this row. Check the import log for details.';
+        }
+
+        return trim($exception->getMessage()) ?: 'This row could not be imported. Check the import log for details.';
+    }
+
+    private function selectedResourceMismatchMessage(array $rows, string $selectedResource): ?string
+    {
+        $headers = array_map(fn ($header) => $this->normalizeHeader($header), $rows[0] ?? []);
+        $detectedResource = $this->detectImportResource($headers);
+
+        if ($detectedResource && $detectedResource !== $selectedResource) {
+            return 'This file looks like a '.ucfirst($detectedResource).' file. Please select Data type "'.ucfirst($detectedResource).'" and import again.';
+        }
+
+        return null;
+    }
+
+    private function detectImportResource(array $headers): ?string
+    {
+        $headerSet = array_flip(array_filter($headers));
+
+        if (isset($headerSet['first_name']) || isset($headerSet['last_name']) || isset($headerSet['customer_email'])) {
+            return 'contacts';
+        }
+
+        if (isset($headerSet['customer_id']) || isset($headerSet['business_name']) || isset($headerSet['billing_address']) || isset($headerSet['phone_no'])) {
+            return 'customers';
+        }
+
+        if (isset($headerSet['lead_name']) || isset($headerSet['lead_status']) || isset($headerSet['source'])) {
+            return 'leads';
+        }
+
+        return null;
     }
 
     private function normalizeCustomerRows(array $rows): array
@@ -478,12 +547,16 @@ class ImportExportController extends Controller
                 if ($canSearchPhone) $q->orWhere('phone', 'like', '%'.$request->string('search').'%');
             });
         } elseif ($resource === 'customers') {
+            app(\App\Services\CustomerDateFilter::class)->apply($query, $request);
             if ($request->filled('search')) $query->where(function ($q) use ($request, $canSearchPhone) {
                 $q->where('name', 'like', '%'.$request->string('search').'%')->orWhere('company', 'like', '%'.$request->string('search').'%')->orWhere('email', 'like', '%'.$request->string('search').'%');
+                foreach (['external_customer_id', 'software', 'license_number', 'product_number'] as $column) {
+                    $q->orWhere($column, 'like', '%'.trim((string) $request->string('search')).'%');
+                }
                 if ($canSearchPhone) $q->orWhere('phone', 'like', '%'.$request->string('search').'%');
             });
             if ($request->filled('industry')) $query->where('industry', 'like', '%'.$request->string('industry').'%');
-            if ($request->filled('status')) $query->where('is_active', $request->boolean('status'));
+            if ($request->filled('status')) $query->where('is_active', $request->input('status') === 'active' || $request->boolean('status'));
         } elseif ($resource === 'contacts') {
             if ($request->filled('search')) $query->where(function ($q) use ($request, $canSearchPhone) {
                 $q->where('first_name', 'like', '%'.$request->string('search').'%')->orWhere('last_name', 'like', '%'.$request->string('search').'%')->orWhere('email', 'like', '%'.$request->string('search').'%');
@@ -561,10 +634,34 @@ class ImportExportController extends Controller
     }
 
     private function value(array $data, array $keys): string { foreach ($keys as $key) { $key = $this->normalizeHeader($key); if (($data[$key] ?? '') !== '') return trim((string) $data[$key]); } return ''; }
-    private function normalizeHeader($value): string { return preg_replace('/[^a-z0-9]+/', '_', strtolower(trim((string) $value))); }
+    private function normalizeHeader($value): string { return preg_replace('/[^a-z0-9]+/', '_', strtolower($this->cleanImportedValue($value))); }
     private function phone(?string $value): string { return preg_replace('/\D+/', '', (string) $value); }
     private function customerIdFromNotes(?string $notes): ?string { return preg_match('/(?:^|\R)Customer ID:\s*(.+?)(?:\R|$)/', (string) $notes, $matches) ? trim($matches[1]) : null; }
     private function ownerOptions(User $user): Collection { $ids = $user->hasPermission('leads.assign') || $user->hasRole('admin') || $user->hasRole('super-admin') ? User::where('is_active', true)->pluck('id')->all() : array_merge([$user->id], $user->reportingTreeUserIds()); return User::whereIn('id', array_unique($ids))->where('is_active', true)->get(); }
+
+    private function cleanImportedValue($value): string
+    {
+        $value = (string) $value;
+
+        if ($value !== '' && function_exists('mb_check_encoding') && ! mb_check_encoding($value, 'UTF-8')) {
+            $converted = @mb_convert_encoding($value, 'UTF-8', 'Windows-1252, ISO-8859-1, UTF-8');
+            if ($converted !== false) {
+                $value = $converted;
+            }
+        }
+
+        if ($value !== '' && ! preg_match('//u', $value)) {
+            $converted = @iconv('Windows-1252', 'UTF-8//IGNORE', $value);
+            if ($converted !== false) {
+                $value = $converted;
+            }
+        }
+
+        $value = str_replace(["\xC2\xA0", "\xA0"], ' ', $value);
+        $normalized = preg_replace('/[ \t]+/u', ' ', $value);
+
+        return trim($normalized ?? $value);
+    }
 
     private function customerNotes(array $data): ?string
     {

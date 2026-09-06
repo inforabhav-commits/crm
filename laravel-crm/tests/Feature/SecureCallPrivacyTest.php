@@ -163,7 +163,7 @@ class SecureCallPrivacyTest extends TestCase
             ->json('screen_pop');
 
         $this->assertSame('Rahul Sharma', $response['record']['name']);
-        $this->assertSame('XXXXXX3210', $response['caller_phone']);
+        $this->assertSame('XXXXXX3210', $response['masked_number']);
         $this->assertSame('Open Customer', $response['record']['open_label']);
         $this->assertStringNotContainsString('9876543210', json_encode($response));
     }
@@ -190,7 +190,7 @@ class SecureCallPrivacyTest extends TestCase
             ->json('screen_pop');
 
         $this->assertSame('unknown', $payload['match_state']);
-        $this->assertSame('XXXXXX3210', $payload['caller_phone']);
+        $this->assertSame('XXXXXX3210', $payload['masked_number']);
         $this->assertStringNotContainsString('9876543210', json_encode($payload));
     }
 

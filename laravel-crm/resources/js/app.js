@@ -1,10 +1,43 @@
 import './bootstrap';
-import { JustCallDialer } from '@justcall/justcall-dialer-sdk';
 
 const callForms = '[data-click-to-call-form]';
 let justCallDialer = null;
 let dialerReadyPromise = null;
 let pendingNumber = null;
+let privateCall = null;
+let minimizedCallId = null;
+
+function renderPrivateCall(payload) {
+    privateCall = payload;
+    document.getElementById('crm-private-dialer').hidden = false;
+    const labels = {answered: 'Connected', completed: 'Ended', ringing: 'Ringing', missed: 'Missed', failed: 'Failed', calling: 'Calling', idle: 'Idle'};
+    setDialerState(payload.status || 'idle', payload.record?.name || 'Unknown Caller', payload.message || labels[payload.status] || 'Incoming');
+    document.getElementById('crm-dialer-number').textContent = payload.masked_number || '';
+    document.getElementById('crm-dialer-direction').textContent = payload.direction === 'outbound' ? 'Outgoing' : 'Incoming';
+    document.getElementById('crm-dialer-notes').textContent = payload.notes || '—';
+    document.getElementById('crm-dialer-disposition').textContent = payload.disposition || '—';
+    const history = document.getElementById('crm-dialer-history');
+    history.hidden = !payload.history_url;
+    if (payload.history_url) history.href = payload.history_url;
+    if (!payload.id || payload.id !== minimizedCallId) showDialerPanel();
+    updatePrivateDuration();
+}
+
+function updatePrivateDuration() {
+    if (!privateCall) return;
+    const connected = ['answered', 'connected'].includes(privateCall.status);
+    const seconds = connected && privateCall.connected_since ? Math.max(0, Math.floor((Date.now() - Date.parse(privateCall.connected_since)) / 1000)) : (privateCall.duration_seconds || 0);
+    document.getElementById('crm-dialer-duration').textContent = String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
+}
+window.addEventListener('crm-call-update', event => {
+    if (event.detail) renderPrivateCall(event.detail);
+    else if (privateCall?.id) {
+        privateCall = null;
+        setDialerState('idle', 'Idle', 'No active call');
+        document.getElementById('crm-private-dialer').hidden = true;
+    }
+});
+window.setInterval(updatePrivateDuration, 1000);
 
 function dialerElements() {
     return {
@@ -38,7 +71,7 @@ function showDialerPanel() {
     }
 }
 
-function ensureDialer() {
+async function ensureDialer() {
     showDialerPanel();
 
     if (justCallDialer) {
@@ -47,6 +80,7 @@ function ensureDialer() {
 
     setDialerState('loading', 'Connecting', 'Loading JustCall dialer...');
 
+    const { JustCallDialer } = await import('@justcall/justcall-dialer-sdk');
     justCallDialer = new JustCallDialer({
         dialerId: 'justcall-dialer',
         onLogin: async () => {
@@ -115,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const { close, panel } = dialerElements();
     if (close && panel) {
         close.addEventListener('click', () => {
+            minimizedCallId = privateCall?.id;
             panel.hidden = true;
         });
     }
@@ -126,6 +161,9 @@ document.addEventListener('submit', async (event) => {
     }
 
     event.preventDefault();
+    event.stopPropagation();
+    showDialerPanel();
+    setDialerState('calling', 'Calling', 'Requesting call...');
 
     const form = event.target;
     const button = form.querySelector('[data-click-to-call-button]');
@@ -151,7 +189,12 @@ document.addEventListener('submit', async (event) => {
 
         const payload = await response.json();
         if (! response.ok || ! payload.ok) {
-            throw new Error(payload.message || 'Unable to start this call.');
+            if (payload.masked_number) {
+                renderPrivateCall(payload);
+                return;
+            }
+            setDialerState('failed', payload.record?.name || 'Call failed', [payload.masked_number, payload.message || 'Unable to start this call.'].filter(Boolean).join(' — '));
+            return;
         }
 
         await dialAuthorizedNumber(payload);

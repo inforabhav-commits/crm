@@ -103,9 +103,9 @@ class JustCallClickToCallTest extends TestCase
         ]);
     }
 
-    public function test_mapped_authorized_agent_can_initiate_call()
+    public function test_mapped_authorized_manager_retains_existing_call_flow()
     {
-        $agent = $this->userWithRole('agent', ['calls.initiate', 'leads.view']);
+        $agent = $this->userWithRole('manager', ['customers.view_full_phone', 'calls.initiate', 'leads.view']);
         $this->map($agent);
         $lead = $this->lead($agent);
 
@@ -125,7 +125,7 @@ class JustCallClickToCallTest extends TestCase
 
     public function test_lead_click_to_call()
     {
-        $agent = $this->userWithRole('agent', ['calls.initiate', 'leads.view']);
+        $agent = $this->userWithRole('manager', ['customers.view_full_phone', 'calls.initiate', 'leads.view']);
         $this->map($agent);
         $lead = $this->lead($agent);
 
@@ -138,7 +138,7 @@ class JustCallClickToCallTest extends TestCase
 
     public function test_authorized_json_request_returns_embedded_dialer_payload()
     {
-        $agent = $this->userWithRole('agent', ['calls.initiate', 'leads.view']);
+        $agent = $this->userWithRole('manager', ['customers.view_full_phone', 'calls.initiate', 'leads.view']);
         $this->map($agent);
         $lead = $this->lead($agent);
 
@@ -147,14 +147,14 @@ class JustCallClickToCallTest extends TestCase
             ->assertOk()
             ->assertJsonPath('ok', true)
             ->assertJsonPath('number', '+15550102000')
-            ->assertJsonPath('display_phone', 'XXXXXXX2000')
+            ->assertJsonPath('display_phone', '+1 555 010 2000')
             ->assertJsonPath('record.type', 'Lead')
             ->assertJsonPath('record.id', $lead->id);
     }
 
     public function test_customer_click_to_call()
     {
-        $agent = $this->userWithRole('agent', ['calls.initiate', 'customers.view']);
+        $agent = $this->userWithRole('manager', ['customers.view_full_phone', 'calls.initiate', 'customers.view']);
         $this->map($agent);
         $customer = $this->customer($agent);
 
@@ -167,7 +167,7 @@ class JustCallClickToCallTest extends TestCase
 
     public function test_contact_click_to_call()
     {
-        $agent = $this->userWithRole('agent', ['calls.initiate', 'contacts.view', 'customers.view']);
+        $agent = $this->userWithRole('manager', ['customers.view_full_phone', 'calls.initiate', 'contacts.view', 'customers.view']);
         $this->map($agent);
         $customer = $this->customer($agent);
         $contact = $this->contact($customer);
@@ -266,7 +266,7 @@ class JustCallClickToCallTest extends TestCase
 
     public function test_audit_log_masks_target_phone_and_contains_no_secrets()
     {
-        $agent = $this->userWithRole('agent', ['calls.initiate', 'leads.view']);
+        $agent = $this->userWithRole('manager', ['customers.view_full_phone', 'calls.initiate', 'leads.view']);
         $this->map($agent);
         $lead = $this->lead($agent);
 

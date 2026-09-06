@@ -5,7 +5,7 @@
         <section class="alert alert-{{ count($summary['errors']) ? 'warning' : 'success' }}">
             <strong>{{ ucfirst($summary['resource']) }} import:</strong> {{ $summary['imported'] }} row(s) imported, {{ count($summary['errors']) }} row(s) rejected.
             @if (count($summary['errors']))
-                <ul class="mb-0 mt-2">@foreach ($summary['errors'] as $error)<li>Row {{ $error['row'] }}: {{ $error['message'] }}</li>@endforeach</ul>
+                <ul class="mb-0 mt-2">@foreach ($summary['errors'] as $error)<li>Row {{ $error['row'] }}: {{ $error['message'] ?: 'This row could not be imported. Please check the selected data type and required columns.' }}</li>@endforeach</ul>
             @endif
         </section>
     @endif

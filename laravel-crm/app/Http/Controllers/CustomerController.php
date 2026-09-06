@@ -20,10 +20,12 @@ class CustomerController extends Controller
     {
         $this->authorize('customers.view');
 
-        $filters = $request->only(['search', 'owner', 'status', 'industry']);
+        $filters = $request->only(['search', 'owner', 'status', 'industry', 'from_date', 'to_date']);
         $query = Customer::with(['owner'])
             ->visibleTo($request->user())
             ->latest();
+
+        app(\App\Services\CustomerDateFilter::class)->apply($query, $request);
 
         if ($search = trim((string) ($filters['search'] ?? ''))) {
             $query->where(function ($subQuery) use ($search, $request) {
@@ -59,6 +61,7 @@ class CustomerController extends Controller
             'customers' => $query->paginate(15)->withQueryString(),
             'owners' => $this->ownerOptions($request->user()),
             'filters' => $filters,
+            'canCallCustomers' => $request->user()->can('calls.initiate') && $request->user()->is_active,
         ]);
     }
 

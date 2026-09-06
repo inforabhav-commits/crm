@@ -1,11 +1,19 @@
 {
+  "node_modules/@justcall/justcall-dialer-sdk/dist/index.mjs": {
+    "file": "assets/index-046e9c13.js",
+    "isDynamicEntry": true,
+    "src": "node_modules/@justcall/justcall-dialer-sdk/dist/index.mjs"
+  },
   "resources/css/app.css": {
     "file": "assets/app-4ed993c7.js",
     "isEntry": true,
     "src": "resources/css/app.css"
   },
   "resources/js/app.js": {
-    "file": "assets/app-2be998a2.js",
+    "dynamicImports": [
+      "node_modules/@justcall/justcall-dialer-sdk/dist/index.mjs"
+    ],
+    "file": "assets/app-e64468dc.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   }

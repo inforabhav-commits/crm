@@ -35,7 +35,7 @@ class IncomingCallScreenPopTest extends TestCase
         parent::tearDown();
     }
 
-    private function userWithRole(string $roleSlug, array $permissions = []): User
+    private function userWithRole(string $roleSlug, array $permissions = ['calls.initiate']): User
     {
         $role = Role::firstOrCreate(['slug' => $roleSlug], ['name' => str($roleSlug)->replace('-', ' ')->title()->toString()]);
         foreach ($permissions as $permission) {
@@ -144,7 +144,7 @@ class IncomingCallScreenPopTest extends TestCase
             ->getJson(route('screen-pop.current'))
             ->assertOk()
             ->assertJsonPath('screen_pop.status', 'ringing')
-            ->assertJsonPath('screen_pop.caller_phone', 'XXXXXXX2000');
+            ->assertJsonPath('screen_pop.masked_number', 'XXXXXXX2000');
     }
 
     public function test_other_agent_does_not_receive_it()
@@ -252,7 +252,7 @@ class IncomingCallScreenPopTest extends TestCase
             ->assertJsonPath('screen_pop.status', 'ringing');
     }
 
-    public function test_completed_or_missed_call_expires_popup()
+    public function test_missed_call_remains_masked_until_expiry()
     {
         $agent = $this->userWithRole('agent');
         $this->map($agent);
@@ -272,7 +272,11 @@ class IncomingCallScreenPopTest extends TestCase
         $this->actingAs($agent)
             ->getJson(route('screen-pop.current'))
             ->assertOk()
-            ->assertJsonPath('screen_pop', null);
+            ->assertJsonPath('screen_pop.status', 'missed')
+            ->assertJsonPath('screen_pop.masked_number', 'XXXXXXX2000')
+            ->assertDontSee('+1 555 010 2000', false);
+        $this->travel(6)->minutes();
+        $this->getJson(route('screen-pop.current'))->assertJsonPath('screen_pop', null);
     }
 
     public function test_unauthorized_record_details_are_not_exposed()
@@ -308,5 +312,25 @@ class IncomingCallScreenPopTest extends TestCase
         $this->actingAs($agent)
             ->getJson(route('screen-pop.current'))
             ->assertJsonPath('screen_pop', null);
+    }
+
+    public function test_completed_and_failed_webhooks_return_masked_payloads(): void
+    {
+        $agent = $this->userWithRole('agent', ['calls.initiate', 'calls.view', 'customers.view']);
+        $this->map($agent);
+        $this->customer($agent);
+        foreach (['completed', 'failed'] as $status) {
+            $this->processInbound(['type' => 'call.'.$status, 'data' => [
+                'call_id' => 'terminal-'.$status, 'direction' => 'incoming',
+                'notes' => 'Call +1 555 010 2000 back',
+            ]]);
+            $response = $this->actingAs($agent)->getJson(route('screen-pop.current'))->assertOk()
+                ->assertJsonPath('screen_pop.status', $status)
+                ->assertJsonPath('screen_pop.masked_number', 'XXXXXXX2000');
+            $this->assertStringNotContainsString('+1 555 010 2000', $response->getContent());
+            $this->assertStringNotContainsString('15550102000', $response->getContent());
+            $this->assertArrayNotHasKey('caller_phone', $response->json('screen_pop'));
+            $this->postJson($response->json('screen_pop.dismiss_url'))->assertOk();
+        }
     }
 }

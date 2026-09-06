@@ -112,7 +112,7 @@
 </div>
 
 @can('calls.initiate')
-<div class="justcall-dialer-shell" id="justcall-dialer-shell" data-state="idle" aria-live="polite">
+<div class="justcall-dialer-shell" id="justcall-dialer-shell" data-state="idle" data-private="{{ app(\App\Services\PhonePrivacyService::class)->canViewFullPhone(auth()->user()) ? '0' : '1' }}" aria-live="polite">
     <div class="justcall-dialer-panel" id="justcall-dialer-panel" hidden>
         <div class="justcall-dialer-header">
             <div>
@@ -124,7 +124,18 @@
             </button>
         </div>
         <div class="justcall-dialer-status" id="justcall-dialer-status">Open the dialer before placing a call.</div>
-        <div class="justcall-dialer-frame" id="justcall-dialer"></div>
+        <div class="p-3" id="crm-private-dialer" hidden>
+            <div id="crm-dialer-number"></div>
+            <div id="crm-dialer-direction" class="text-muted small"></div>
+            <div id="crm-dialer-duration" class="small">00:00</div>
+            <div class="small mt-2">Notes: <span id="crm-dialer-notes">—</span></div>
+            <div class="small">Disposition: <span id="crm-dialer-disposition">—</span></div>
+            <a class="btn btn-sm btn-outline-primary mt-2" id="crm-dialer-history" hidden>Update notes / disposition</a>
+            <p class="small text-muted mt-2 mb-0">Answer and end controls are unavailable in this CRM integration.</p>
+        </div>
+        @if (app(\App\Services\PhonePrivacyService::class)->canViewFullPhone(auth()->user()))
+            <div class="justcall-dialer-frame" id="justcall-dialer"></div>
+        @endif
     </div>
 </div>
 
@@ -148,6 +159,7 @@
             <div class="d-flex gap-2">
                 <a class="btn btn-sm btn-primary" id="screen-pop-open" href="#" style="display:none">Open Customer</a>
                 <a class="btn btn-sm btn-outline-secondary" id="screen-pop-search" href="#" style="display:none">Search Leads</a>
+                <a class="btn btn-sm btn-outline-secondary" id="screen-pop-history" href="#" style="display:none">Notes / Disposition</a>
             </div>
         </div>
     </div>
@@ -175,6 +187,7 @@
         const open = document.getElementById('screen-pop-open');
         const search = document.getElementById('screen-pop-search');
         const dismiss = document.getElementById('screen-pop-dismiss');
+        const history = document.getElementById('screen-pop-history');
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         let currentDismissUrl = null;
         let connectedSince = null;
@@ -183,7 +196,8 @@
             if (status === 'ringing') return 'Ringing';
             if (status === 'answered' || status === 'connected') return 'Connected';
             if (status === 'missed') return 'Missed';
-            if (status === 'completed') return 'Completed';
+            if (status === 'completed') return 'Ended';
+            if (status === 'failed') return 'Failed';
             return 'Idle';
         }
 
@@ -208,10 +222,19 @@
         }
 
         function show(data) {
+            if (document.getElementById('justcall-dialer-shell')?.dataset.private === '1') {
+                window.dispatchEvent(new CustomEvent('crm-call-update', {detail: data}));
+                setState(data.status);
+                box.style.display = 'none';
+                return;
+            }
             currentDismissUrl = data.dismiss_url;
             connectedSince = data.connected_since ? new Date(data.connected_since).getTime() : null;
             setState(data.status);
-            phone.textContent = data.caller_phone || 'Unknown number';
+            phone.textContent = data.masked_number || 'Unknown number';
+            history.style.display = data.history_url ? '' : 'none';
+            if (data.history_url) history.href = data.history_url;
+            if (['completed', 'missed', 'failed'].includes(data.status)) connectedSince = null;
             search.href = data.search_url;
             search.style.display = '';
             open.textContent = 'Open Customer';
@@ -237,21 +260,32 @@
 
             box.style.display = 'block';
             updateTimer();
+            if (['completed', 'missed', 'failed'].includes(data.status)) {
+                timer.textContent = String(data.duration_seconds || 0) + ' seconds';
+                timer.style.display = '';
+            }
         }
 
         function idle() {
+            window.dispatchEvent(new CustomEvent('crm-call-update', {detail: null}));
             setState('idle');
             title.textContent = 'Idle';
             phone.textContent = 'No active call';
             summary.textContent = '';
             open.style.display = 'none';
             search.style.display = 'none';
+            history.style.display = 'none';
             connectedSince = null;
             currentDismissUrl = null;
             updateTimer();
         }
 
         dockButton.addEventListener('click', function () {
+            if (document.getElementById('justcall-dialer-shell')?.dataset.private === '1') {
+                const panel = document.getElementById('justcall-dialer-panel');
+                panel.hidden = !panel.hidden;
+                return;
+            }
             box.style.display = box.style.display === 'block' ? 'none' : 'block';
         });
 

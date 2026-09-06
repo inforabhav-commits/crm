@@ -4,6 +4,9 @@
     @php
         $phonePrivacy = app(\App\Services\PhonePrivacyService::class);
     @endphp
+    @if ($errors->any())
+        <div class="alert alert-danger">{{ $errors->first() }}</div>
+    @endif
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
@@ -46,8 +49,17 @@
                 <div class="col-md-3">
                     <input class="form-control" name="industry" value="{{ $filters['industry'] ?? '' }}" placeholder="Industry">
                 </div>
-                <div class="col-md-2 d-grid">
+                <div class="col-md-3">
+                    <label for="from_date" class="form-label">From Date</label>
+                    <input id="from_date" class="form-control" type="date" name="from_date" value="{{ old('from_date', $filters['from_date'] ?? '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="to_date" class="form-label">To Date</label>
+                    <input id="to_date" class="form-control" type="date" name="to_date" value="{{ old('to_date', $filters['to_date'] ?? '') }}">
+                </div>
+                <div class="col-md-2 d-grid align-self-end">
                     <button class="btn btn-outline-primary" type="submit">Filter</button>
+                    <a href="{{ route('customers.index') }}" class="btn btn-link">Clear filters</a>
                 </div>
             </form>
         </div>
@@ -77,7 +89,15 @@
                             <td>{{ $customer->company ?: '-' }}</td>
                             <td>{{ $customer->phone ? $phonePrivacy->display($customer->phone, auth()->user()) : '-' }}</td>
                             <td><span class="badge crm-status-badge {{ $customer->is_active ? 'crm-status-success' : 'crm-status-secondary' }}">{{ $customer->is_active ? 'Active' : 'Inactive' }}</span></td>
-                            <td class="text-end">
+                            <td class="text-end text-nowrap">
+                                @can('calls.initiate')
+                                    @if ($canCallCustomers && app(\App\Services\Integrations\JustCall\JustCallClickToCallService::class)->canShowFor($customer))
+                                        <form class="d-inline" method="post" action="{{ route('customers.justcall.call', $customer) }}" data-click-to-call-form>
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-primary" type="submit" title="Call Customer" aria-label="Call Customer" data-click-to-call-button><i data-lucide="phone" aria-hidden="true"></i></button>
+                                        </form>
+                                    @endif
+                                @endcan
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ route('customers.show', $customer) }}">View</a>
                                 @can('customers.edit')
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('customers.edit', $customer) }}">Edit</a>

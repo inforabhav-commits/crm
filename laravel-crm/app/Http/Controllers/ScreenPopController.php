@@ -15,13 +15,14 @@ class ScreenPopController extends Controller
 {
     public function current(Request $request, CallLogMatcher $matcher)
     {
+        $this->authorize('calls.initiate');
         $callLog = CallLog::with(['user', 'lead.owner', 'customer.owner', 'contact.customer.owner'])
             ->where('provider', 'justcall')
             ->where('direction', 'inbound')
             ->where('user_id', $request->user()->id)
             ->whereNull('screen_pop_dismissed_at')
             ->where('screen_pop_expires_at', '>', now())
-            ->whereIn('status', ['ringing', 'answered'])
+            ->whereIn('status', ['ringing', 'answered', 'completed', 'missed', 'failed'])
             ->latest('last_event_at')
             ->first();
 
@@ -36,6 +37,7 @@ class ScreenPopController extends Controller
 
     public function dismiss(Request $request, CallLog $callLog)
     {
+        $this->authorize('calls.initiate');
         abort_unless($callLog->user_id === $request->user()->id, 403);
 
         $callLog->forceFill(['screen_pop_dismissed_at' => now()])->save();
@@ -49,6 +51,11 @@ class ScreenPopController extends Controller
         $record = $this->visibleMatchedRecord($request, $callLog);
         $state = $record ? 'matched' : $match['state'];
         $phonePrivacy = app(PhonePrivacyService::class);
+        if ($record && ! $phonePrivacy->canViewFullPhone($request->user())) {
+            foreach (['name', 'owner', 'recent_activity'] as $field) {
+                $record[$field] = $phonePrivacy->maskedText($record[$field] ?? null);
+            }
+        }
 
         if ($match['state'] === 'matched' && ! $record) {
             $state = 'restricted';
@@ -57,7 +64,13 @@ class ScreenPopController extends Controller
         return [
             'id' => $callLog->id,
             'status' => $callLog->status,
-            'caller_phone' => $phonePrivacy->mask($callLog->customer_number ?: $callLog->from_number ?: $callLog->customer_number_normalized),
+            'masked_number' => $phonePrivacy->mask($callLog->customer_number ?: $callLog->from_number ?: $callLog->customer_number_normalized),
+            'direction' => $callLog->direction,
+            'notes' => $request->user()->can('calls.view') ? $phonePrivacy->maskedText($callLog->crm_notes ?: $callLog->notes) : null,
+            'disposition' => $request->user()->can('calls.view') ? $phonePrivacy->maskedText($callLog->crm_disposition ?: $callLog->disposition) : null,
+            'duration_seconds' => $callLog->duration_seconds,
+            'ended_at' => $callLog->ended_at?->toIso8601String(),
+            'history_url' => $request->user()->can('calls.view') ? route('calls.show', $callLog) : null,
             'match_state' => $state,
             'ambiguous_type' => $state === 'ambiguous' ? $match['type'] : null,
             'match_count' => $state === 'ambiguous' ? $match['count'] : null,

@@ -85,6 +85,7 @@ class CallLogUpsertService
             'call.answered' => 'answered',
             'call.completed' => 'completed',
             'call.missed' => 'missed',
+            'call.failed' => 'failed',
             default => null,
         };
 
@@ -100,7 +101,7 @@ class CallLogUpsertService
         return match ($status) {
             'initiated', 'ringing' => 10,
             'answered' => 20,
-            'missed' => 30,
+            'missed', 'failed' => 30,
             'completed' => 40,
             default => $status ? 15 : 0,
         };
@@ -196,7 +197,7 @@ class CallLogUpsertService
 
         return match ($event['event_type'] ?? null) {
             'call.ringing', 'call.answered' => now()->addMinutes(5),
-            'call.completed', 'call.missed' => now(),
+            'call.completed', 'call.missed', 'call.failed' => now()->addMinutes(5),
             default => $callLog->screen_pop_expires_at,
         };
     }

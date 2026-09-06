@@ -157,6 +157,37 @@ class ImportExportTest extends TestCase
         $this->assertStringNotContainsString('CVV', $customer->notes);
     }
 
+    public function test_customer_csv_import_cleans_excel_non_breaking_spaces(): void
+    {
+        $agent = $this->user('agent', ['import.customers']);
+        $badSpace = chr(160);
+
+        $this->actingAs($agent)->post('/import-export', [
+            'resource' => 'customers',
+            'file' => $this->csv("Customer ID,Name,Email,Business Name,Phone No,Billing Address\nC-101,Space Customer,space@example.com,{$badSpace}{$badSpace}Niagara Corp,1555010111,\"{$badSpace}{$badSpace}Po Box 10\"\n"),
+        ])->assertRedirect('/import-export')->assertSessionHas('import_summary.imported', 1);
+
+        $customer = Customer::where('email', 'space@example.com')->firstOrFail();
+        $this->assertSame('Niagara Corp', $customer->company);
+        $this->assertSame('Po Box 10', $customer->address);
+    }
+
+    public function test_import_reports_clear_message_when_customer_file_is_uploaded_as_leads(): void
+    {
+        $agent = $this->user('agent', ['import.leads', 'import.customers']);
+
+        $this->actingAs($agent)->post('/import-export', [
+            'resource' => 'leads',
+            'file' => $this->csv("Customer ID,Name,Email,Business Name,Phone No\nC-100,Wrong Type,wrong@example.com,Wrong Co,1555010101\n"),
+        ])->assertRedirect('/import-export')
+            ->assertSessionHas('import_summary.imported', 0)
+            ->assertSessionHas('import_summary.errors.0.row', 1)
+            ->assertSessionHas('import_summary.errors.0.message', 'This file looks like a Customers file. Please select Data type "Customers" and import again.');
+
+        $this->assertSame(0, Lead::count());
+        $this->assertSame(0, Customer::count());
+    }
+
     public function test_customer_xlsx_import_supports_same_format(): void
     {
         $agent = $this->user('agent', ['import.customers']);
@@ -302,7 +333,9 @@ class ImportExportTest extends TestCase
         ])->assertRedirect('/import-export')
             ->assertSessionHas('import_summary.imported', 0)
             ->assertSessionHas('import_summary.errors.0.row', 2)
-            ->assertSessionHas('import_summary.errors.1.row', 3);
+            ->assertSessionHas('import_summary.errors.1.row', 3)
+            ->assertSessionHas('import_summary.errors.0.message', 'Name is required.')
+            ->assertSessionHas('import_summary.errors.1.message', 'A record with this email, phone, or customer ID already exists.');
 
         $this->assertSame(1, Customer::count());
     }

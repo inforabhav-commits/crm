@@ -92,6 +92,7 @@ class JustCallCallEventNormalizer
         $type = Str::of($rawEventType)->lower()->replace(['_', '-', ' '], '.')->squish()->toString();
 
         return match (true) {
+            str_contains($type, 'failed') => 'call.failed',
             str_contains($type, 'missed') || str_contains($type, 'voicemail') => 'call.missed',
             str_contains($type, 'answered') || str_contains($type, 'answer') => 'call.answered',
             str_contains($type, 'completed') || str_contains($type, 'ended') || str_contains($type, 'end') => 'call.completed',

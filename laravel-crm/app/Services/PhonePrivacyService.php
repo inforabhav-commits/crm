@@ -70,4 +70,9 @@ class PhonePrivacyService
     {
         return $this->canViewFullPhone($user) ? (string) ($phone ?? '') : $this->mask($phone);
     }
+
+    public function maskedText(?string $text): string
+    {
+        return preg_replace_callback('/\+?\d[\d\s().-]{5,}\d/', fn ($match) => $this->mask($match[0]), (string) $text);
+    }
 }

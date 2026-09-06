@@ -44,6 +44,17 @@ class JustCallClickToCallService
             return $this->failed('This record does not have a valid phone number to call.');
         }
 
+        // The installed CTI SDK requires the destination in the browser. Never
+        // fall back to it for users whose phone access is restricted.
+        if (! $this->phonePrivacy->canViewFullPhone($user)) {
+            return $this->failed('Secure calling is unavailable: a server-side JustCall calling integration is required.') + [
+                'masked_number' => $this->phonePrivacy->mask($phone),
+                'record' => ['type' => class_basename($record), 'id' => $record->getKey(), 'name' => $this->phonePrivacy->maskedText($this->recordName($record))],
+                'direction' => 'outbound',
+                'status' => 'failed',
+            ];
+        }
+
         $metadata = [
             'crm_entity_type' => class_basename($record),
             'crm_entity_id' => $record->getKey(),
