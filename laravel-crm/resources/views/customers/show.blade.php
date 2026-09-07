@@ -13,7 +13,7 @@
             <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
                 <div>
                     <div class="crm-record-kicker">Customer Summary</div>
-                    <h2 class="h4 mb-1">{{ $customer->name }}</h2>
+                    <h2 class="h4 mb-1">{{ $phonePrivacy->canViewFullPhone(auth()->user()) ? $customer->name : $phonePrivacy->maskedText($customer->name) }}</h2>
                     <p class="text-muted mb-2">{{ $customer->company ?: 'No company recorded' }}</p>
                     <div class="d-flex flex-wrap gap-2">
                         <span class="badge crm-status-badge {{ $customer->is_active ? 'crm-status-success' : 'crm-status-secondary' }}">{{ $customer->is_active ? 'Active' : 'Inactive' }}</span>

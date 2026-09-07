@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class JustCallClickToCallTest extends TestCase
@@ -121,6 +122,64 @@ class JustCallClickToCallTest extends TestCase
             'entity_id' => $lead->id,
             'user_id' => $agent->id,
         ]);
+    }
+
+    public function test_admin_retains_browser_dialer_payload()
+    {
+        $admin = $this->userWithRole('admin', ['calls.initiate', 'customers.view']);
+        $this->map($admin);
+        $customer = $this->customer($admin);
+
+        $this->actingAs($admin)->postJson(route('customers.justcall.call', $customer))
+            ->assertOk()->assertJsonPath('number', '+15550103000')
+            ->assertJsonPath('ok', true);
+    }
+
+    public function test_restricted_call_fails_closed_for_every_record_type_even_with_api_credentials()
+    {
+        Http::fake();
+        $agent = $this->userWithRole('agent', ['calls.initiate', 'customers.view', 'leads.view', 'contacts.view']);
+        $this->map($agent);
+        $customer = $this->customer($agent);
+        $customer->update(['name' => 'Customer +1 555 010 3000']);
+
+        foreach (['customers' => $customer, 'leads' => $this->lead($agent), 'contacts' => $this->contact($customer)] as $type => $record) {
+            $response = $this->actingAs($agent)->postJson(route($type.'.justcall.call', $record))
+                ->assertStatus(422)->assertJsonPath('ok', false)
+                ->assertJsonPath('code', 'secure_calling_not_supported')
+                ->assertJsonPath('direction', 'outbound')->assertJsonPath('status', 'failed');
+            $this->assertSame(['ok', 'message', 'code', 'masked_number', 'record', 'direction', 'status'], array_keys($response->json()));
+            $this->assertStringNotContainsString($record->phone, $response->getContent());
+            $this->assertStringNotContainsString(preg_replace('/\D/', '', $record->phone), $response->getContent());
+            $this->actingAs($agent)->get(route($type.'.show', $record))->assertOk()
+                ->assertDontSee($record->phone, false)
+                ->assertDontSee('id="justcall-dialer"', false)
+                ->assertSee('id="crm-private-dialer"', false);
+        }
+
+        Http::assertNothingSent();
+    }
+
+    public function test_restricted_non_json_request_never_redirects_to_provider()
+    {
+        $agent = $this->userWithRole('agent', ['calls.initiate', 'customers.view']);
+        $this->map($agent);
+        $customer = $this->customer($agent);
+        $this->actingAs($agent)->from(route('customers.show', $customer))
+            ->post(route('customers.justcall.call', $customer))
+            ->assertRedirect(route('customers.show', $customer))->assertSessionHas('error');
+        $this->assertStringNotContainsString($customer->phone, session('error'));
+    }
+
+    public function test_inactive_user_fails_safely_at_service_boundary()
+    {
+        Http::fake();
+        $agent = $this->userWithRole('agent', [], ['is_active' => false]);
+        $this->map($agent);
+        $result = app(\App\Services\Integrations\JustCall\JustCallClickToCallService::class)
+            ->launch($agent, $this->customer($agent), \Illuminate\Http\Request::create('/'));
+        $this->assertSame(['ok' => false, 'message' => 'Your CRM account is inactive.'], $result);
+        Http::assertNothingSent();
     }
 
     public function test_lead_click_to_call()

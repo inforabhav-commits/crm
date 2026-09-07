@@ -33,3 +33,24 @@ listeners['crm-call-update']({detail: {status: 'failed', direction: 'outbound', 
 assert.equal(element('crm-dialer-direction').textContent, 'Outgoing');
 assert.equal(element('justcall-dialer-status').textContent, 'Secure calling is unavailable.');
 console.log('PASS: masked rendering, minimize/poll, terminal duration, idle, blocked outbound (11 assertions).');
+
+// Exercise the fetch/submit branch: a secure-call rejection must never load the SDK.
+async function testRestrictedSubmit() {
+    const button = {dataset: {}, innerHTML: 'Call', disabled: false};
+    const form = {action: '/customers/42/justcall/call', method: 'POST', matches: () => true, querySelector: () => button};
+    context.document.querySelector = () => null;
+    context.FormData = class { constructor(value) { assert.equal(value, form); } };
+    context.fetch = async (url, options) => {
+        assert.equal(url, form.action);
+        assert.equal(options.method, 'POST');
+        return {ok: false, json: async () => ({ok: false, code: 'secure_calling_not_supported', masked_number: 'XXXXXX4881', direction: 'outbound', status: 'failed', message: 'No call was placed.'})};
+    };
+    vm.runInContext('ensureDialer = async () => { throw new Error("SDK must not load"); };', context);
+    await listeners.submit({target: form, preventDefault() {}, stopPropagation() {}});
+    assert.equal(element('crm-dialer-number').textContent, 'XXXXXX4881');
+    assert.equal(element('justcall-dialer-status').textContent, 'No call was placed.');
+    assert.equal(button.disabled, false);
+    assert.equal(JSON.stringify([...elements.values()]).includes('9876544881'), false);
+    console.log('PASS: restricted POST renders masked failure without loading SDK; button restored.');
+}
+testRestrictedSubmit().catch(error => { console.error(error); process.exitCode = 1; });

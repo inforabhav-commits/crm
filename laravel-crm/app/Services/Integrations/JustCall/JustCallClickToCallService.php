@@ -47,7 +47,8 @@ class JustCallClickToCallService
         // The installed CTI SDK requires the destination in the browser. Never
         // fall back to it for users whose phone access is restricted.
         if (! $this->phonePrivacy->canViewFullPhone($user)) {
-            return $this->failed('Secure calling is unavailable: a server-side JustCall calling integration is required.') + [
+            return $this->failed('Secure calling is unavailable: this integration has no verified server-side API to call through your mapped JustCall agent. Contact your administrator. No call was placed.') + [
+                'code' => 'secure_calling_not_supported',
                 'masked_number' => $this->phonePrivacy->mask($phone),
                 'record' => ['type' => class_basename($record), 'id' => $record->getKey(), 'name' => $this->phonePrivacy->maskedText($this->recordName($record))],
                 'direction' => 'outbound',
